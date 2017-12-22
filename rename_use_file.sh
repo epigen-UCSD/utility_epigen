@@ -8,3 +8,17 @@ eval `$(sed 's/^/mv /g' ../tmp/name_convert.txt )`
 
 sed 's/^/mv /' ../tmp/name_convert.txt | bash
 
+
+# directories
+while read l ; do a=($l) ; find ~/data/outputs/ -type d -name ${a[0]}| xargs -n1 -I '{}' echo mv {} {} | sed "s/${a[0]}/${a[1]}/2"| bash ; done < ~/convert.txt 
+
+
+# files
+while read l ; do a=($l) ; find ~/data/outputs/ -type f -name ${a[0]}*| xargs -n1 -I '{}' echo mv {} {} | sed "s/${a[0]}/${a[1]}/2;s/_001//2" | bash ; done < ~/convert.txt
+
+while read l ; do a=($l) ; find ~/data/seqdata// -type f -name ${a[0]}*| xargs -n1 -I '{}' echo mv {} {} | sed "s/${a[0]}/${a[1]}/2;s/_001//2" | bash ; done < ~/convert.txt 
+
+
+# tracks
+cd ~/data/outputs/signals/
+while read l ; do a=($l) ; find . -name ${a[1]}_tracks.json | xargs -n1 -I '{}' sed -i "s/${a[0]}/${a[1]}/g;s/_001//g" {}  ; done < ~/convert.txt

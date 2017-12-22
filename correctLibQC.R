@@ -1,16 +1,16 @@
 # correct libQC txt given the
 
 args <- commandArgs(trailingOnly = TRUE)
-l <- args[1]
+s <- args[1]
 
 
 libQC_dir <- "/home/zhc268/data/outputs/libQCs"
-libQC_report_files <- system(paste("find",libQC_dir, "-name *_qc.txt"),intern=T)
+l <- system(paste("find",libQC_dir, paste0("-name ", s,"*_qc.txt")),intern=T)
 
 
 
-findBam <-  function(l){
-    s <- unlist(strsplit(l,split="/"))[7]
+findBam <-  function(s){
+
     bams <- system(paste0("find /home/zhc268/data/outputs/bams/ -name \"",s,"[\\_|\\.][a-Z]*.bam\""),intern=T)
 
     idx  <- grep("nodup",bams)
@@ -19,11 +19,9 @@ findBam <-  function(l){
 
     if(length(rawbam)>1) {
         cat(s,"\n")
- #       print(rawbam);
         rawbam.idx <- grepl("trim",rawbam)
         cmd= paste0("rm ", rawbam[!rawbam.idx])
         print(cmd)
-#        system(cmd)
     }
     if(length(finalbam)>1) {
         cat(s,"\n")
@@ -36,12 +34,7 @@ findBam <-  function(l){
     return(data.frame(rawbam,finalbam,stringsAsFactors=F))
 }
 
-#for(l in libQC_report_files) findBam(l)
-
-
-#l <- grep("JYH_163", libQC_report_files,value=T)
-#l <- libQC_report_files[1]
-bams <- findBam(l)
+bams <- findBam(s)
 
 qc <- read.table(l,sep = "\t",header = F,fill = T,col.names = paste0("v",seq(3)),
                  stringsAsFactors = F)
