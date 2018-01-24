@@ -8,7 +8,9 @@ import gzip
 import argparse
 
 
-name_dics={'Human':'1000000','Mouse':'0100000', 'Cattle':'0010000','Ecoli':'0001000','Mycoplasma':'0000100', 'PhiX':'0000010','Vectors':'0000001','NoHit':'0000000'}
+name_dics={'Human':'10000000','Mouse':'01000000', 'Rat':'00100000',
+           'Cattle':'00010000','Ecoli':'00001000',
+           'Mycoplasma':'00000100', 'PhiX':'00000010','Vectors':'00000001','NoHit':'00000000'}
 name_dics_rev={v: k for k, v in name_dics.iteritems()}
 
 def parseArgs():
