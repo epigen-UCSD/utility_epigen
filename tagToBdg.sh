@@ -8,8 +8,8 @@ which bedClip &>/dev/null || { echo "bedClip not found! Download: <http://hgdown
 
 # end of checking
 
-if [ $# -lt 2 ];then
-    echo "Need 2 parameters! <bedgraph> <chrom size file>"
+if [ $# -lt 1 ];then
+    echo "Need  parameters! <tagalign>"
     exit
 fi
 
