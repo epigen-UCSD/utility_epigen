@@ -1,12 +1,28 @@
 #!/bin/bash
 
+# check commands: slopBed, bedGraphToBigWig and bedClip
+
+which slopBed &>/dev/null || { echo "bedtools not found! Download bedTools: <http://code.google.com/p/bedtools/>"; exit 1; }
+which bedGraphToBigWig &>/dev/null || { echo "bedGraphToBigWig not found! Download: <http://hgdownload.cse.ucsc.edu/admin/exe/>"; exit 1; }
+which bedClip &>/dev/null || { echo "bedClip not found! Download: <http://hgdownload.cse.ucsc.edu/admin/exe/>"; exit 1; }
+
+# end of checking
+
+if [ $# -lt 2 ];then
+    echo "Need 2 parameters! <bedgraph> <chrom size file>"
+    exit
+fi
+
+
 # bedgraph to bigwig 
 bdg=$1 # input
-g=$2 # genome
+chrsz=$2 # chrsz
+
+#chrsz="/projects/ps-epigen/GENOME/${g}/${g}.chrom.sizes"
 prefix=${bdg%.bdg}
 bedgraph=${prefix}.bedgraph
 bedgraph_srt=${prefix}.srt.bedgraph
-chrsz="/projects/ps-epigen/GENOME/${g}/${g}.chrom.sizes"
+
 bigwig=${prefix}.bigwig
 
 slopBed -i $bdg -g $chrsz -b 0 | bedClip stdin $chrsz $bedgraph
