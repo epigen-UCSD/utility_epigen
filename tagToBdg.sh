@@ -6,7 +6,7 @@ which bedtools &>/dev/null || { echo "bedtools not found! Download bedTools: <ht
 
 # end of checking
 
-if [ $# -lt 1 ];then
+if [ $# -lt 2 ];then
     echo "Need  parameters! <tagalign> <chrom size file>"
     exit
 fi
