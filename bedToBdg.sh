@@ -10,7 +10,7 @@ which bedGraphToBigWig &>/dev/null || { echo "bedGraphToBigWig not found! Downlo
 # end of checking
 
 if [ $# -lt 3 ];then
-    echo "Need  3 parameters! <tagalign|bed> <chrom size file> <window size>"
+    echo "Need  at least 3 parameters! <tagalign|bed> <chrom size file> <window size>"
     exit
 fi
 
@@ -20,7 +20,8 @@ input=$1 # input
 chrsz=$2 # chrsz
 window=$3
 
-prefix=${input%*.}
+
+prefix=${input%.*}
 bdg=${prefix}_wind_${window}.bdg
 bw=${prefix}_wind_${window}.bw
 
