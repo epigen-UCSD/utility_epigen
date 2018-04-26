@@ -3,11 +3,11 @@
 # transfer the analysis results from scratch folder to the storage folder 
 # input: JYH_XX the prefix
 
+[[ $# -eq 0 ]] && { echo "ERROR:Need input"; exit 1; }
 sample=$1
-
 [[ $# -eq 2 ]] && chip=T
 
-from=/home/zhc268/scratch/outputs/${sample}_chip 
+from=/home/zhc268/scratch/outputs/${sample}
 to=/projects/ps-epigen/outputs/
 
 if [ -d "$from" ]; then
@@ -57,4 +57,4 @@ rsync -uvr report $reports_dir
 
 # usage
 # ids=( 1 2 `seq 35 37` ) 
-# for i in  ${ids[@]}; do s=JYH_$i; echo "transfering  $s"; results_transfer.sh $s; done 
+# for i in  ${ids[@]}; do s=JYH_$i; echo "transfering  $s"; results_transfer.sh $s; done
