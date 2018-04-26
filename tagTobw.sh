@@ -23,12 +23,9 @@ prefix=${tag%.tag*} # no >2 tag in the tagalign file name
 bdg=${prefix}.bdg
 bdg_srt=${prefix}.srt.bedgraph
 bigwig=${prefix}.bw
-n=$(wc -l $tag|cut -d" " -f1)
-l=${#n}
-scale=${n:0:$[l-6]}.${n:$[l-6]:6}
+scale=
 
-
-bedtools genomecov -i $tag -bg -g $chrsz -scale $scale | slopBed -i stdin -g $chrsz -b 0 | bedClip stdin $chrsz $bdg
+bedtools genomecov -i $tag -bg -g $chrsz | slopBed -i stdin -g $chrsz -b 0 | bedClip stdin $chrsz $bdg
 sort -k1,1 -k2,2n $bdg > $bdg_srt
 bedGraphToBigWig $bdg_srt $chrsz $bigwig
 rm -f $bdg $bdg_srt

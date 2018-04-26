@@ -28,5 +28,5 @@ bw=${prefix}_wind_${window}.bw
 macs2 pileup -i $input -B --extsize $[window/2] -o ${bdg}
 slopBed -i $bdg -g $chrsz -b 0| bedClip stdin $chrsz ${bdg}_clip # clip
 sort -k1,1 -k2,2n ${bdg}_clip > ${bdg} # sort 
-bedGraphToBigWig $bdg $chrsz $bw # track 
-
+bbedGraphToBigWig $bdg $chrsz $bw # track 
+rm ${bdg}_clip

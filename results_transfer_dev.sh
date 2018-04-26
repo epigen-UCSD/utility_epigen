@@ -1,11 +1,45 @@
 #!/bin/bash
+#Time-stamp: <2018-04-26 10:49:07> 
+############################################################
+# args 
+############################################################
+usage(){
+    cat <<EOF    
+
+Transfer results from scratch to condo data folder 
+Usage: results_transfer.sh [-s <sample_id>] [-t <atac|chip|hic>] 
+
+EOF
+}
+
+
+[[ $# -eq 0 ]] && { usage;exit }  
+
+while getopts ":s:t" opt;
+do
+    case $opt in
+        s) sample=$s;;
+        t) type=$t;;
+        \?) usage
+            echo "input error"
+            exit 1;;
+    esac
+done
+
+
+
+# set default
+
+[[ -z $sample ]] && { echo "no input sample "; exit 1 } 
+[[ -z $type ]] && type="atac"
+
+
+############################################################
+# main 
+############################################################
 
 # transfer the analysis results from scratch folder to the storage folder 
-# input: JYH_XX the prefix
-
-sample=$1
-
-[[ $# -eq 2 ]] && chip=T
+# input: JYH_XX the prefix 
 
 from=/home/zhc268/scratch/outputs/${sample}_chip 
 to=/projects/ps-epigen/outputs/
