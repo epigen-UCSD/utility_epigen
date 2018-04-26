@@ -5,10 +5,14 @@
 
 [[ $# -eq 0 ]] && { echo "ERROR:Need input"; exit 1; }
 sample=$1
-[[ $# -eq 2 ]] && chip=T
+
+[[ $# -eq 2 ]] && chip=true
 
 from=/home/zhc268/scratch/outputs/${sample}
-to=/projects/ps-epigen/outputs/
+[[ $chip == "true" ]]  && from=${from}_chip
+
+
+to="/projects/ps-epigen/outputs/"
 
 if [ -d "$from" ]; then
     cd $from;
@@ -24,13 +28,13 @@ find . -name "${sample}*bam*"  | xargs -I '{}' rsync -uv --progress '{}' ${to}"b
 find . -name "${sample}*bed*"  | xargs -I '{}' rsync -uv --progress '{}' ${to}"beds"
 
 # tagAligns 
-find . -name "${sample}*tagAlign*"  | xargs -I '{}' rsync -uv --progress '{}' ${to}"tagAligns"
+find . -name "${sample}*tagAlign.gz"  | xargs -I '{}' rsync -uv --progress '{}' ${to}"tagAligns"
 
 
 # peaks 
 peak_dir=${to}"peaks/"$sample
 mkdir -p $peak_dir
-find . -name "${sample}*[p|P]eak*" -type f  | xargs -I '{}' rsync -uv --progress '{}' $peak_dir
+find . -name "${sample}*[p|P]eak*.gz" -type f  | xargs -I '{}' rsync -uv --progress '{}' $peak_dir
 
 
 
@@ -44,7 +48,8 @@ find ./qc -name "${sample}*" | xargs -I '{}' rsync -uv --progress '{}' $qc_dir
 signal_dir=${to}"signals"
 mkdir -p $signal_dir 
 find . -name "${sample}*bigwig*"  | xargs -I '{}' rsync -uv --progress '{}' $signal_dir
-find . -name "${sample}_tracks.json"  | xargs -I '{}' rsync -uv --progress '{}' $signal_dir
+find . -name "${sample}*bw*"  | xargs -I '{}' rsync -uv --progress '{}' $signal_dir
+find . -name "${sample}*_tracks.json"  | xargs -I '{}' rsync -uv --progress '{}' $signal_dir
 
 
 # reports 
