@@ -9,7 +9,7 @@ sample=$1
 [[ $# -eq 2 ]] && chip=true
 
 from=/home/zhc268/scratch/outputs/${sample}
-[[ $chip == "true" ]]  && from=${from}_chip
+#[[ $chip == "true" ]]  && from=${from}_chip
 
 
 to="/projects/ps-epigen/outputs/"
