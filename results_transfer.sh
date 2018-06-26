@@ -5,15 +5,11 @@
 
 [[ $# -eq 0 ]] && { echo "ERROR:Need input"; exit 1; }
 sample=$1
+uid=$2
 
-[[ $# -eq 2 ]] && chip=true
-
-from=/home/zhc268/scratch/outputs/${sample}
-#[[ $chip == "true" ]]  && from=${from}_chip
-
-
+from=/oasis/tscc/scratch/${uid}/outputs/${sample}
 to="/projects/ps-epigen/outputs/"
-
+o
 if [ -d "$from" ]; then
     cd $from;
 fi
