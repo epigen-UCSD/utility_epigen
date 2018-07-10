@@ -5,14 +5,11 @@
 
 [[ $# -eq 0 ]] && { echo "ERROR:Need input"; exit 1; }
 sample=$1
-uid=$2
 
-from=/oasis/tscc/scratch/${uid}/outputs/${sample}
+from=/oasis/tscc/scratch/$(whoami)/outputs/${sample}
 to="/projects/ps-epigen/outputs/"
-o
-if [ -d "$from" ]; then
-    cd $from;
-fi
+
+[[ -d "$from" ]] &&  cd $from
 
 # trimed fastq
 find . -name "${sample}*trim.fastq.gz" -exec rsync -uv --progress {} /projects/ps-epigen/seqdata/ \; 
@@ -30,7 +27,7 @@ find . -name "${sample}*tagAlign.gz"  | xargs -I '{}' rsync -uv --progress '{}' 
 # peaks 
 peak_dir=${to}"peaks/"$sample
 mkdir -p $peak_dir
-find . -name "${sample}*[p|P]eak*.gz" -type f  | xargs -I '{}' rsync -uv --progress '{}' $peak_dir
+find . -name "${sample}*[p|P]eak*.gz*" -type f  | xargs -I '{}' rsync -uv --progress '{}' $peak_dir
 
 
 
@@ -38,7 +35,7 @@ find . -name "${sample}*[p|P]eak*.gz" -type f  | xargs -I '{}' rsync -uv --progr
 qc_dir=${to}"libQCs/"$sample
 mkdir -p $qc_dir
 find ./qc -name "${sample}*" | xargs -I '{}' rsync -uv --progress '{}' $qc_dir
-
+find . -name "*.qc"| xargs -I '{}' rsync -uv --progress '{}' $qc_dir
 
 # signals 
 signal_dir=${to}"signals"
