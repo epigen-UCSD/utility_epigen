@@ -8,17 +8,14 @@ fn <- args[1]
 scores <- fread(fn,col.names=c('Flag','Score'))
 setDF(scores)
 
-
-mpq.fail = (scores$Score <=30)
-F1804.fail = (bitwAnd(1804,scores$Flag)>0)
-Improper = !(bitwAnd(2,scores$Flag)>0)
-
-
-
+## count
 require(limma)
+a <- vennCounts(cbind(
+    mpq.fail = (scores$Score <=30),
+    F1804.fail = (bitwAnd(1804,scores$Flag)>0),
+    Improper = !(bitwAnd(2,scores$Flag)>0)))
 
-a <- vennCounts(cbind(mpq.fail,F1804.fail,Improper))
-
+## plot
 pdf(file=sub(".txt",".venn.pdf",fn))
 vennDiagram(a,counts.col='red',cex=1,main=sub(".score.txt","",fn))
 dev.off()
