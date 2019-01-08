@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -q condo
+#PBS -N django_runSetQC
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=2:00:00
+#PBS -V
+#PBS -m abe
+#PBS -A epigen-group
+
+# -v pass parameters: type, set_id
+cat############################################################
+## update status to job submitted @VM
+############################################################
+cmd="source activate django;python \$(which updateLibrariesSetQC.py) -s '2' -id $set_id"
+ssh zhc268@epigenomics.sdsc.edu $cmd
+
+
+############################################################
+## run setQC @TSCC
+############################################################
+
+setQC_wrapper.sh -n $set_id -t $type  2>&1| tee -a /projects/ps-epigen/logs/app/${set_id}.log
+
+############################################################
+# update status to finish or warning @ VM
+############################################################
+ver=$(cd ~/software/setQC/; git rev-parse --short HEAD)
+[[ $type = "atac_chip" ]] && nm=_$type
+html_file="/projects/ps-epigen/outputs/setQCs/${set_id}/$(cat ~/data/outputs/setQCs/${set_id}.rstr.txt)/setQC_report${nm}.html"
+status='-1'
+[[ -f $html_file ]] && status='3'
+
+url="http://epigenomics.sdsc.edu:8088/${set_id}/$(cat ~/data/outputs/setQCs/${set_id}.rstr.txt)/setQC_report${nm}.html"
+cmd="source activate django;python \$(which updateLibrariesSetQC.py) -s $status -v $ver -url $url -id $set_id"
+ssh zhc268@epigenomics.sdsc.edu $cmd
