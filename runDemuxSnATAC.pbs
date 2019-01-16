@@ -1,0 +1,94 @@
+#!/bin/bash
+#PBS -q condo
+#PBS -N django_bcl2fastq
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=8:00:00
+#PBS -o /home/zhc268/logs/runDemuxSnATAC.out
+#PBS -e /home/zhc268/logs/runDemuxSnATAC.err
+#PBS -V
+#PBS -m abe
+#PBS -A epigen-group
+
+# -v pass parameters: flowcell_id, run_dir
+############################################################
+## update status to job submitted @VM
+############################################################
+cmd="source activate django;python \$(which updateRunStatus.py) -s '1' -f $flowcell_id"
+ssh zhc268@epigenomics.sdsc.edu $cmd
+
+
+############################################################
+## run bcl2fastq @TSCC
+############################################################
+## prepare variables & directories
+out_dir="${run_dir}/Data/Fastqs"
+mkdir -p $out_dir
+
+## prepair reads_cnt_file
+reads_cnt_file="${out_dir}/reads_cnt.tsv"
+>$reads_cnt_file
+
+## sample sheet
+samplesheet=($(find $run_dir -name "SampleSheet.csv" ))
+i1_file=($(find $run_dir -name "SampleSheet_I1.csv" ))
+i2_file=($(find $run_dir -name "SampleSheet_I2.csv" ))
+
+## libs 
+n=$(grep -n Data $samplesheet|cut -d':' -f1) # row_id for Data 
+libs=($(sed -n "$[n+2]"',$p' $samplesheet|cut -d',' -f 1))
+indexes_1=($(sed 's/\"//g' $i1_file))
+indexes_2=($(sed 's/\"//g' $i2_file))
+n_libs=$(echo ${#libs[*]})
+
+## run bcl2fastq 
+#bcl2fastq --runfolder-dir $run_dir --output-dir $out_dir --no-lane-splitting --min-log-level TRACE --create-fastq-for-index-reads -p 16
+#wait 
+
+
+############################################################
+## run ATACdemultiplex
+############################################################
+INDEX_POOL_FILE=/projects/ps-epigen/software/bin/snATAC_barcode_comp_v2.txt
+cd $out_dir
+
+I1=${out_dir}/Undetermined_S0_I1_001.fastq.gz
+I2=${I1/I1/I2}
+R1=${I1/I1/R1}
+R2=${I1/I1/R2}
+
+for i in $(seq 0 $[n_libs-1])
+do
+    l=${libs[$i]}
+    idx1=${indexes_1[$i]}
+    idx2=${indexes_2[$i]}
+    
+    OUTPUT_DIR=${out_dir}"/"${l}"/"
+    mkdir -p $OUTPUT_DIR
+    
+    ATACdemultiplex -fastq_I1 $I1 -fastq_I2 $I2 -fastq_R1 $R1 -fastq_R2 $R2 -output_tag_name $l -index_no_replicate ${INDEX_POOL_FILE} -p7_plates $idx1 -i5_plates $idx2 -output_path ${OUTPUT_DIR} -nbThreads 16 -write_logs 1>${l}.log 2>&1 & sleep 1
+done
+
+wait
+
+
+############################################################
+## update reads cnt & symlink to /data/seqdata
+############################################################
+cd $out_dir # return to fastq dir 
+for l in ${libs[@]}
+do
+    log_file=$(find $out_dir -name "*${l}*_stats.log")
+    r1_file=$(find $out_dir -name "*${l}*R1*.fastq.gz")
+    r2_file=$(find $out_dir -name "*${l}*R2*.fastq.gz")    
+    nreads=$(awk -v FS='\t' '(NR==3){print $2}' $log_file)
+    echo -e "$l\t$nreads">>$reads_cnt_file
+    ln -s $r1_file /projects/ps-epigen/seqdata/${l}_R1.fastq.gz
+    ln -s $r2_file /projects/ps-epigen/seqdata/${l}_R2.fastq.gz    
+done
+
+
+############################################################
+# update status to finish or warning @ VM
+############################################################
+cmd="source activate django; python \$(which updateReadsNumberPerRun.py) -f $flowcell_id -i $reads_cnt_file; python \$(which updateRunReads.py) -f $flowcell_id"
+ssh zhc268@epigenomics.sdsc.edu $cmd
