@@ -41,8 +41,8 @@ indexes_2=($(sed 's/\"//g' $i2_file))
 n_libs=$(echo ${#libs[*]})
 
 ## run bcl2fastq 
-#bcl2fastq --runfolder-dir $run_dir --output-dir $out_dir --no-lane-splitting --min-log-level TRACE --create-fastq-for-index-reads -p 16
-#wait 
+bcl2fastq --runfolder-dir $run_dir --output-dir $out_dir --no-lane-splitting --min-log-level TRACE --create-fastq-for-index-reads -p 16
+wait 
 
 
 ############################################################
