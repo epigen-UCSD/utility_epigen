@@ -56,6 +56,7 @@ I2=${I1/I1/I2}
 R1=${I1/I1/R1}
 R2=${I1/I1/R2}
 
+n_thread=$[16/n_libs]
 for i in $(seq 0 $[n_libs-1])
 do
     l=${libs[$i]}
@@ -65,7 +66,7 @@ do
     OUTPUT_DIR=${out_dir}"/"${l}"/"
     mkdir -p $OUTPUT_DIR
     
-    ATACdemultiplex -fastq_I1 $I1 -fastq_I2 $I2 -fastq_R1 $R1 -fastq_R2 $R2 -output_tag_name $l -index_no_replicate ${INDEX_POOL_FILE} -p7_plates $idx1 -i5_plates $idx2 -output_path ${OUTPUT_DIR} -nbThreads 16 -write_logs 1>${l}.log 2>&1 & sleep 1
+    ATACdemultiplex -fastq_I1 $I1 -fastq_I2 $I2 -fastq_R1 $R1 -fastq_R2 $R2 -output_tag_name $l -index_no_replicate ${INDEX_POOL_FILE} -p7_plates $idx1 -i5_plates $idx2 -output_path ${OUTPUT_DIR} -nbThreads $n_thread -write_logs 1>${l}.log 2>&1 & sleep 1
 done
 
 wait
