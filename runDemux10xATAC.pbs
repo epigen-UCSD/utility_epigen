@@ -50,4 +50,4 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 ############################################################
 # run 10x pipeline
 ############################################################
-qsub -t 0-1 -v samples=${HOME}/runlogs/run_2019-01-22_10xatac_modifiedPeakPar.txt $(which run10xPipeline.pbs)
+#qsub -t 0-1 -v samples=${HOME}/runlogs/run_2019-01-22_10xatac_modifiedPeakPar.txt $(which run10xPipeline.pbs)
