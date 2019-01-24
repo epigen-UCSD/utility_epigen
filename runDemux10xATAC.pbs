@@ -1,10 +1,10 @@
 #!/bin/bash
 #PBS -q condo
-#PBS -N django_10xMkfastqs
+#PBS -N django_10xDemux
 #PBS -l nodes=1:ppn=16
 #PBS -l walltime=8:00:00
-#PBS -o /home/zhc268/logs/run_10xMkfastqs.out
-#PBS -e /home/zhc268/logs/run_10xMkfastqs.err
+#PBS -o /home/zhc268/logs/runDemux10xATAC.out
+#PBS -e /home/zhc268/logs/runDemux10xATAC.err
 #PBS -V
 #PBS -m abe
 #PBS -A epigen-group
@@ -30,16 +30,24 @@ reads_cnt_file="${out_dir}/reads_cnt.tsv"
 >$reads_cnt_file
 
 ## samplesheet
-samplesheet="${out_dir}/SampleSheet.csv"
+samplesheet="${out_dir}/SampleSheet_I1.csv"
+libs=$(awk -v FS=',' '(NR>1){print $2}' $samplesheet)
 
+## run mkfastq 
 cd $run_dir
 export PATH=/projects/ps-epigen/software/cellranger-atac-1.0.1/:$PATH
 cellranger-atac mkfastq --run=$run_dir --output-dir=$out_dir --localcores=16 --csv $samplesheet --qc 
 
+## transfer/link data
+for i in $libs;do ln -s ${out_dir}/$flowcell_id/${i} ~/data/seqdata/;done 
 
-# create simlink to the seqdata folder
-for i in $(awk -v FS=',' '(NR>1){print $2}' $samplesheet)
-do
-    for i in $(awk -v FS=',' '(NR>1){print $2}' $samplesheet); do find $(pwd) -name "$i" -type d -exec ln -s {} ~/data/seqdata/ \; ;done 
-done
+############################################################
+# update status to finish or warning @ VM
+############################################################
+cmd="source activate django; python \$(which updateReadsNumberPerRun.py) -f $flowcell_id -i $reads_cnt_file; python \$(which updateRunReads.py) -f $flowcell_id"
+ssh zhc268@epigenomics.sdsc.edu $cmd
 
+############################################################
+# run 10x pipeline
+############################################################
+qsub -t 0-1 -v samples=${HOME}/runlogs/run_2019-01-22_10xatac_modifiedPeakPar.txt $(which run10xPipeline.pbs)

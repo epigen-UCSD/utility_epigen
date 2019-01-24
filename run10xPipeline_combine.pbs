@@ -19,9 +19,9 @@ FASTQDIR="/projects/ps-epigen/seqdata/"
 
 # select libs 
 samplenames=(`cat $samples`)
-INPREFIX=${samplenames[${PBS_ARRAYID}*3]} #index start from 0
-SAMPLE=${samplenames[${PBS_ARRAYID}*3+1]}
-GENOME=${samplenames[${PBS_ARRAYID}*3+2]}
+INPREFIX=${samplenames[${PBS_ARRAYID}*2]} #index start from 0
+GENOME=${samplenames[${PBS_ARRAYID}*2+1]}
+#OUTDIR="${WORKDIR}${INPREFIX}"
 
 cd $WORKDIR
 
@@ -37,19 +37,14 @@ case $GENOME in
 esac
 
 # prepair fastqs
-fastqs=$(echo $SAMPLE| awk -v FS=',' -v d="${FASTQDIR}" '{ for(i=1;i<=NF-1;i++) {printf "%s,", d$i};print d$NF;}')
-
-#fastqs="${FASTQDIR}/${INPREFIX}"
-#echo $fastqs
-# [[ ! -d $fastqs ]] && { echo "$fastqs not found"; exit 0; }
+fastqs="${FASTQDIR}/${INPREFIX}"
+echo $fastqs
+[[ ! -d $fastqs ]] && { echo "$fastqs not found"; exit 0; }
 
 
 # runPipeline
-cellranger-atac count --id=$INPREFIX --fastqs=$fastqs --sample $SAMPLE --reference=$genome_dir --localcores=16  --mempercore=6
+cellranger-atac count --id=$INPREFIX --fastqs=$fastqs --reference=$genome_dir --localcores=16  --mempercore=8
 wait
-
-# transfer results
-rsync -azr ${WORKDIR}${INPREFIX} ~/data/outputs/10xATAC/
 
 ## addtional check
 #[[ -z $(find ${OUTDIR}/qc/rep1 -name "*_qc.txt") ]]  && { echo  "pipeline interrupted"; exit 0; }
