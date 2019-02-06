@@ -39,8 +39,13 @@ export PATH=/projects/ps-epigen/software/cellranger-atac-1.0.1/:$PATH
 cellranger-atac mkfastq --run=$run_dir --output-dir=$out_dir --localcores=16 --csv $samplesheet --qc 
 
 ## transfer/link data
-for i in $libs;do ln -s ${out_dir}/$flowcell_id/${i} ~/data/seqdata/;done 
-
+for i in $libs
+do
+    ln -s ${out_dir}/$flowcell_id/${i} ~/data/seqdata/
+    cat ~/data/seqdata/${i}/${i}*R3*fastq.gz > ~/data/seqdata/${i}_R2.fastq.gz & sleep 1
+    cat ~/data/seqdata/${i}/${i}*R1*fastq.gz > ~/data/seqdata/${i}_R1.fastq.gz & sleep 1
+done 
+wait 
 ############################################################
 # update status to finish or warning @ VM
 ############################################################

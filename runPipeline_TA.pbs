@@ -1,0 +1,180 @@
+#!/bin/bash
+#PBS -q home-epigen
+#PBS -N TA_inhouse
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=48:00:00
+#PBS -V
+#PBS -m abe
+#PBS -A epigen-group
+
+#source activate bds_atac
+############################################################
+# load envs
+############################################################
+source activate /home/opoirion/prog/conda_env
+export PATH=$PATH:/home/opoirion/go/local/bin/
+export PICARDHOME=/projects/ps-epigen/software/miniconda3/envs/bds_atac/share/picard-2.18.2-0/
+
+############################################################
+# prepares
+############################################################
+WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_snATAC/"
+FASTQDIR="/projects/ps-epigen/seqdata/"
+BARCODE_FILE='/projects/ps-epigen/software/snATAC/chromium-shared-sample-indexes-plate.txt'
+
+# select libs & determine runtype 
+samplenames=(`cat $samples`)
+nfields=$(awk 'END{print NF}' $samples)
+
+if [ $nfields -eq 4 ] # merge run
+then
+    ############################################################
+    echo "run two libs -merge"
+    ## load prefix
+    INPREFIX=${samplenames[${PBS_ARRAYID}*4]} #index start from 0
+    SAMPLES=${samplenames[${PBS_ARRAYID}*4+1]}
+    GENOME=${samplenames[${PBS_ARRAYID}*4+2]}
+    BARCODE=${samplenames[${PBS_ARRAYID}*4+3]}
+    OUTDIR="${WORKDIR}${INPREFIX}"
+    mkdir -p $OUTDIR
+    p7=${OUTDIR}/barcodes_${BARCODE}_p7.txt
+    grep  $BARCODE, $BARCODE_FILE| awk -v FS=',' -v OFS='\t' '{for(i=2;i<=NF;i++) print "p7",$i}'>$p7
+
+    ## fastqs
+    LIBS=($(echo $SAMPLES |awk -v FS=',' -v OFS='\t' '{for(i=1;i<=NF;i++) print $i}'))
+    id=${LIBS[0]}
+    r1=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R1*.fastq.gz")
+    r2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R3*.fastq.gz")
+    i1=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_I1*.fastq.gz")
+    i2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R2*.fastq.gz")
+    echo $r1
+    
+    id=${LIBS[1]}
+    r1_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R1*.fastq.gz")
+    r2_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R3*.fastq.gz")
+    i1_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_I1*.fastq.gz")
+    i2_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R2*.fastq.gz")
+    echo $r1_2
+    
+    ## set up genome and args
+    if [ $GENOME = 'hg19' ] || [ $GENOME = 'hg38' ]
+    then
+        GENOME="male.hg19"
+        BOWTIE_INDEX="/home/opoirion/data/ref_genomes/human/male.hg19/Bowtie2Index"
+        BOWTIE_INDEX_NAME="male.hg19.fa"
+        REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19_all_genes_refseq_TSS_promoter_2000.bed"
+        CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19.refSeq_promoter.bed"
+    elif [ $GENOME = 'mm10' ]
+    then
+        BOWTIE_INDEX="/home/opoirion/data/ref_genomes/mouse/mm10/Bowtie2Index"
+        BOWTIE_INDEX_NAME="mm10"    
+        REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_all_genes_refseq_TSS_promoter_2000.bed"
+        CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_consecutive_promoters.bed"
+    fi
+
+    python /home/opoirion/code/snATAC/snATAC_pipeline/from_scratch_pipeline.py \
+           -consecutive_promoter_file $CONSEC_PROMOTER \
+           -output_name $INPREFIX \
+           -output_path $OUTDIR \
+           -threads_number_demultiplex 5 \
+           -fastq_I1 $i1 -fastq_I2 $i2 \
+           -fastq_R1 $r1 -fastq_R2 $r2 \
+           -fastq_I1_additional ${i1_2} -fastq_I2_additional ${i2_2} \
+           -fastq_R1_additional ${r1_2} -fastq_R2_additional ${r2_2} \
+           -max_nb_mistake 0 \
+           -additional_lanes 2 3 4 \
+           -compute_TSS_enrichment True \
+           -index_barcodes $p7 \
+           -all_barcodes i5 \
+           -taglength 16 \
+           -skip_sort_report True \
+           -bowtie_index_path $BOWTIE_INDEX \
+           -bowtie_index_name $BOWTIE_INDEX_NAME \
+           -refseq_promoter_file $REFSEQ_PROMOTER \
+           -threads_number 16 \
+           -workflow_version v2 \
+           -min_number_of_unaligned_reads_per_cell 1000 \
+           -perform_chromVAR_analysis True \
+           -java /home/opoirion/prog/jdk-10.0.1/bin/java
+
+elif [ $nfields -eq 3 ] # single run
+then
+    ############################################################
+    echo "run single lib"
+
+    INPREFIX=${samplenames[${PBS_ARRAYID}*3]} #index start from 0
+    GENOME=${samplenames[${PBS_ARRAYID}*3+1]}
+    BARCODE=${samplenames[${PBS_ARRAYID}*3+2}}
+    OUTDIR="${WORKDIR}${INPREFIX}"
+    mkdir -p $OUTDIR
+    p7=${OUTDIR}/barcodes_${BARCODE}_p7.txt
+    grep  $BARCODE, $BARCODE_FILE| awk -v FS=',' -v OFS='\t' '{for(i=2;i<=NF;i++) print "p7",$i}'>$p7
+
+    ## fastqs
+    r1=$(find ${FASTQDIR}/${INPREFIX}/ -name "${INPREFIX}*L001_R1*.fastq.gz")
+    r2=$(find ${FASTQDIR}/${INPREFIX}/ -name "${INPREFIX}*L001_R3*.fastq.gz")
+    i1=$(find ${FASTQDIR}/${INPREFIX}/ -name "${INPREFIX}*L001_I1*.fastq.gz")
+    i2=$(find ${FASTQDIR}/${INPREFIX}/ -name "${INPREFIX}*L001_R2*.fastq.gz")
+    echo $r1
+    [[ ! -f $r1 ]] && { echo "r1 not found"; exit 0; }
+    [[ ! -f $r2 ]] && { echo "r2 not found"; exit 0; }
+    [[ ! -f $i1 ]] && { echo "i1 not found"; exit 0; }
+    [[ ! -f $i2 ]] && { echo "i2 not found"; exit 0; }
+
+    ## set up genome and args
+    if [ $GENOME = 'hg19' ] || [ $GENOME = 'hg38' ]
+    then
+        GENOME="male.hg19"
+        BOWTIE_INDEX="/home/opoirion/data/ref_genomes/human/male.hg19/Bowtie2Index"
+        BOWTIE_INDEX_NAME="male.hg19.fa"
+        REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19_all_genes_refseq_TSS_promoter_2000.bed"
+        CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19.refSeq_promoter.bed"
+    elif [ $GENOME = 'mm10' ]
+    then
+        BOWTIE_INDEX="/home/opoirion/data/ref_genomes/mouse/mm10/Bowtie2Index"
+        BOWTIE_INDEX_NAME="mm10"    
+        REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_all_genes_refseq_TSS_promoter_2000.bed"
+        CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_consecutive_promoters.bed"
+    fi
+
+
+    ############################################################
+    # runPipeline
+    ############################################################
+
+
+    ## run
+    python /home/opoirion/code/snATAC/snATAC_pipeline/from_scratch_pipeline.py \
+           -consecutive_promoter_file $CONSEC_PROMOTER \
+           -output_name $INPREFIX \
+           -output_path $OUTDIR \
+           -threads_number_demultiplex 5 \
+           -fastq_I1 $i1 -fastq_I2 $i2 \
+           -fastq_R1 $r1 -fastq_R2 $r2 \
+           -max_nb_mistake 0 \
+           -additional_lanes 2 3 4 \
+           -compute_TSS_enrichment True \
+           -index_barcodes $p7 \
+           -all_barcodes i5 \
+           -taglength 16 \
+           -skip_sort_report True \
+           -bowtie_index_path $BOWTIE_INDEX \
+           -bowtie_index_name $BOWTIE_INDEX_NAME \
+           -refseq_promoter_file $REFSEQ_PROMOTER \
+           -threads_number 16 \
+           -workflow_version v2 \
+           -min_number_of_unaligned_reads_per_cell 1000 \
+           -perform_chromVAR_analysis True \
+           -java /home/opoirion/prog/jdk-10.0.1/bin/java
+else
+    echo  "wrong sample files";
+    exit 0
+fi
+
+
+wait
+
+# add .finished.txt tag
+#touch /projects/ps-epigen/outputs/singlecell/${INPREFIX}/.finished.txt
+
+#qsub -k oe -v samples=$(pwd)/run_2019-02-04_TA_inhouse.txt -t 0-2  $(which runPipeline_TA.pbs)

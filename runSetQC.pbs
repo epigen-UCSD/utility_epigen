@@ -8,7 +8,7 @@
 #PBS -A epigen-group
 
 # -v pass parameters: type, set_id
-cat############################################################
+############################################################
 ## update status to job submitted @VM
 ############################################################
 cmd="source activate django;python \$(which updateLibrariesSetQC.py) -s '2' -id $set_id"
