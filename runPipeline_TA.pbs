@@ -20,21 +20,62 @@ export PICARDHOME=/projects/ps-epigen/software/miniconda3/envs/bds_atac/share/pi
 ############################################################
 WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_snATAC/"
 FASTQDIR="/projects/ps-epigen/seqdata/"
+PROJECT_DIR="/projects/ps-epigen/outputs/snATAC/"
 BARCODE_FILE='/projects/ps-epigen/software/snATAC/chromium-shared-sample-indexes-plate.txt'
 
 # select libs & determine runtype 
 samplenames=(`cat $samples`)
 nfields=$(awk 'END{print NF}' $samples)
 
-if [ $nfields -eq 4 ] # merge run
+if [ $nfields -eq 2 ] # co-clustering
+then
+    ############################################################
+    echo "run co-clustering libs"
+    ## load prefix
+    SAMPLES=${samplenames[${PBS_ARRAYID}*$nfields]}
+    GENOME=${samplenames[${PBS_ARRAYID}*$nfields+1]}
+    INPREFIX=${SAMPLES//,/x}
+    OUTDIR="${PROJECT_DIR}${INPREFIX}"
+    mkdir -p $OUTDIR
+
+    ## set up genome and args
+    if [ $GENOME = 'hg19' ] || [ $GENOME = 'hg38' ]
+    then
+        GENOME="male.hg19"
+        BOWTIE_INDEX="/home/opoirion/data/ref_genomes/human/male.hg19/Bowtie2Index"
+        BOWTIE_INDEX_NAME="male.hg19.fa"
+        REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19_all_genes_refseq_TSS_promoter_2000.bed"
+        CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19.refSeq_promoter.bed"
+    elif [ $GENOME = 'mm10' ]
+    then
+        BOWTIE_INDEX="/home/opoirion/data/ref_genomes/mouse/mm10/Bowtie2Index"
+        BOWTIE_INDEX_NAME="mm10"    
+        REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_all_genes_refseq_TSS_promoter_2000.bed"
+        CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_consecutive_promoters.bed"
+    fi
+
+    python /home/opoirion/code/snATAC/snATAC_pipeline/clustering_pipeline.py \
+           -output_name $INPREFIX \
+           -project_folders_to_merge ${SAMPLES//,/ } \
+           -project_folder $PROJECT_DIR \
+           -output_path $OUTDIR \
+           -threads_number 16 \
+           -format_output_for_webinterface True \
+           -refseq_promoter_file $REFSEQ_PROMOTER \
+           -sambamba /home/opoirion/prog/sambamba-0.6.8-linux-static \
+           -perform_chromVAR_analysis True \
+           -rm_original_bed_file True \
+           -workflow_version v2
+
+elif [ $nfields -eq 4 ] # merge run
 then
     ############################################################
     echo "run two libs -merge"
     ## load prefix
-    INPREFIX=${samplenames[${PBS_ARRAYID}*4]} #index start from 0
-    SAMPLES=${samplenames[${PBS_ARRAYID}*4+1]}
-    GENOME=${samplenames[${PBS_ARRAYID}*4+2]}
-    BARCODE=${samplenames[${PBS_ARRAYID}*4+3]}
+    INPREFIX=${samplenames[${PBS_ARRAYID}*$nfields]} #index start from 0
+    SAMPLES=${samplenames[${PBS_ARRAYID}*$nfields+1]}
+    GENOME=${samplenames[${PBS_ARRAYID}*$nfields+2]}
+    BARCODE=${samplenames[${PBS_ARRAYID}*$nfields+3]}
     OUTDIR="${WORKDIR}${INPREFIX}"
     mkdir -p $OUTDIR
     p7=${OUTDIR}/barcodes_${BARCODE}_p7.txt
@@ -75,7 +116,7 @@ then
     python /home/opoirion/code/snATAC/snATAC_pipeline/from_scratch_pipeline.py \
            -consecutive_promoter_file $CONSEC_PROMOTER \
            -output_name $INPREFIX \
-           -output_path $OUTDIR \
+           -output_path $WORKDIR \
            -threads_number_demultiplex 5 \
            -fastq_I1 $i1 -fastq_I2 $i2 \
            -fastq_R1 $r1 -fastq_R2 $r2 \
@@ -147,7 +188,7 @@ then
     python /home/opoirion/code/snATAC/snATAC_pipeline/from_scratch_pipeline.py \
            -consecutive_promoter_file $CONSEC_PROMOTER \
            -output_name $INPREFIX \
-           -output_path $OUTDIR \
+           -output_path $WORKDIR \
            -threads_number_demultiplex 5 \
            -fastq_I1 $i1 -fastq_I2 $i2 \
            -fastq_R1 $r1 -fastq_R2 $r2 \
