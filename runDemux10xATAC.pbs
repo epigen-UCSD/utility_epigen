@@ -21,9 +21,14 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 ############################################################
 ## run bcl2fastq @TSCC
 ############################################################
+## delete last demux info 
+[[ -d ${run_dir}/${flowcell_id} ]] && rm -r ${run_dir}/${flowcell_id}  # delete existing folder
+[[ -f ${run_dir}/__${flowcell_id}.mro ]] && rm ${run_dir}/__${flowcell_id}.mro  # delete existing folder
+
 ## prepare variables & directories
+out_dir_sys=${run_dir}/${flowcell_id}/outs/fastq_path/
 out_dir=${run_dir}/Data/Fastqs/
-mkdir -p $out_dir
+mkdir -p ${out_dir}
 
 ## prepair reads_cnt_file
 reads_cnt_file="${out_dir}/reads_cnt.tsv"
@@ -36,12 +41,12 @@ libs=$(awk -v FS=',' '(NR>1){print $2}' $samplesheet)
 ## run mkfastq 
 cd $run_dir
 export PATH=/projects/ps-epigen/software/cellranger-atac-1.0.1/:$PATH
-cellranger-atac mkfastq --run=$run_dir --output-dir=$out_dir --localcores=16 --csv $samplesheet --qc 
+cellranger-atac mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc 
 
 ## transfer/link data
 for i in $libs
 do
-    ln -s ${out_dir}/$flowcell_id/${i} ~/data/seqdata/
+    ln -s ${out_dir_sys}/$flowcell_id/${i} ~/data/seqdata/
     cat ~/data/seqdata/${i}/${i}*R3*fastq.gz > ~/data/seqdata/${i}_R2.fastq.gz & sleep 1
     cat ~/data/seqdata/${i}/${i}*R1*fastq.gz > ~/data/seqdata/${i}_R1.fastq.gz & sleep 1
     nreads=$(zcat ~/data/seqdata/${i}_R1.fastq.gz | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1

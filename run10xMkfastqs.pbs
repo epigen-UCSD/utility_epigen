@@ -21,9 +21,15 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 ############################################################
 ## run bcl2fastq @TSCC
 ############################################################
+## delete last demux info 
+[[ -d ${run_dir}/${flowcell_id} ]] && rm -r ${run_dir}/${flowcell_id}  # delete existing folder
+[[ -f ${run_dir}/__${flowcell_id}.mro ]] && rm ${run_dir}/__${flowcell_id}.mro  # delete existing folder
+
 ## prepare variables & directories
 out_dir=${run_dir}/Data/Fastqs/
+[[ -d $out_dir ]] && rm -r $out_dir # delete existing folder
 mkdir -p $out_dir
+
 
 ## prepair reads_cnt_file
 reads_cnt_file="${out_dir}/reads_cnt.tsv"
