@@ -1,18 +1,31 @@
 #!/bin/bash
+#PBS -q condo
+#PBS -N download_igm
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=2:00:00
+#PBS -V
+#PBS -m abe
+#PBS -A epigen-group
+
+# -v pass parameters: ftp_addr,user,pass, flowcell_id
+
 
 ############################################################
 # args: $flowcell_id,  $ftp_addr $user $password 
 ############################################################
+cmd="source activate django;python \$(which updateRunStatus.py) -s '1' -f $flowcell_id"
+ssh zhc268@epigenomics.sdsc.edu $cmd
 
 #ftp_addr=ftp://igm-storage1.ucsd.edu/190215_K00180_0755_BH2WKMBBXY_SR75_Combo/
-ftp_addr=$1
-user=$2
-pass=$3
-flowcell_id=$4
+#ftp_addr=$1
+#user=$2
+#pass=$3
+#flowcell_id=$4
 ############################################################
 # transfer data 
 ############################################################
-cmd="wget -q -r --user $user --password $pass  $ftp_addr  ~/data/seqdata"
+cd  /home/zhc268/data/seqdata
+cmd="wget  -r -q  --user $user --password $pass  $ftp_addr"
 echo $cmd 
 echo $cmd | bash
 
@@ -29,8 +42,16 @@ for i in *_R1_*.fastq.gz
 do
     if [ ${i:0:12} != "Undetermined" ]
     then
+
         lib=${i%_S[0-9]*}
         echo $lib
+        if [ -f  ${i/_R1_/_R2_} ]
+        then
+            ln -s ${fastq_dir}/$i /home/zhc268/data/seqdata/${lib}_R1.fastq.gz
+            ln -s ${fastq_dir}/${i/_R1_/_R2_} /home/zhc268/data/seqdata/${lib}_R2.fastq.gz
+        else
+            ln -s ${fastq_dir}/$i /home/zhc268/data/seqdata/${lib}.fastq.gz
+        fi
         nreads=$(zcat $i | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file & sleep 1
     fi
 done
