@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -q home-epigen
-#PBS -N django_10xMkfastqs
+#PBS -N django_10xPipeline
 #PBS -l nodes=1:ppn=16
 #PBS -l walltime=24:00:00
 #PBS -l pmem=6gb
@@ -13,7 +13,7 @@
 # -v pass parameters: samples
 
 export PATH=/projects/ps-epigen/software/cellranger-atac-1.0.1/:$PATH
-WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_snATAC/"
+WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_TA/"
 FASTQDIR="/projects/ps-epigen/seqdata/"
 
 
@@ -36,7 +36,7 @@ case $GENOME in
         exit 0;;
 esac
 
-# prepair fastqs
+# prepaire fastqs
 fastqs=$(echo $SAMPLE| awk -v FS=',' -v d="${FASTQDIR}" '{ for(i=1;i<=NF-1;i++) {printf "%s,", d$i};print d$NF;}')
 
 #fastqs="${FASTQDIR}/${INPREFIX}"

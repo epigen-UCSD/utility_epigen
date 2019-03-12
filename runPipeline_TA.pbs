@@ -58,7 +58,7 @@ then
            -output_name $INPREFIX \
            -project_folders_to_merge ${SAMPLES//,/ } \
            -project_folder $PROJECT_DIR \
-           -output_path $OUTDIR \
+           -output_path $WORKDIR \
            -threads_number 16 \
            -format_output_for_webinterface True \
            -refseq_promoter_file $REFSEQ_PROMOTER \
@@ -134,6 +134,7 @@ then
            -refseq_promoter_file $REFSEQ_PROMOTER \
            -threads_number 16 \
            -workflow_version v2 \
+           -format_output_for_webinterface True \           
            -min_number_of_unaligned_reads_per_cell 1000 \
            -perform_chromVAR_analysis True \
            -java /home/opoirion/prog/jdk-10.0.1/bin/java
@@ -190,6 +191,7 @@ then
            -output_name $INPREFIX \
            -output_path $WORKDIR \
            -threads_number_demultiplex 5 \
+           -format_output_for_webinterface True \           
            -fastq_I1 $i1 -fastq_I2 $i2 \
            -fastq_R1 $r1 -fastq_R2 $r2 \
            -max_nb_mistake 0 \
@@ -216,6 +218,10 @@ fi
 wait
 
 # add .finished.txt tag
-#touch /projects/ps-epigen/outputs/singlecell/${INPREFIX}/.finished.txt
+
+# transfer results
+
+rsync -azr ${WORKDIR}${INPREFIX} ~/data/outputs/snATAC/
+touch ~/data/outputs/snATAC/${INPREFIX}/.finished.txt 
 
 #qsub -k oe -v samples=$(pwd)/run_2019-02-04_TA_inhouse.txt -t 0-2  $(which runPipeline_TA.pbs)

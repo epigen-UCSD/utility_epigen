@@ -1,0 +1,83 @@
+#!/bin/bash
+#PBS -q home-epigen
+#PBS -N snATAC_processing
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=24:00:00
+#PBS -V
+#PBS -m abe
+#PBS -A epigen-group
+
+#source activate bds_atac
+
+WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_snATAC/"
+FASTQDIR="/projects/ps-epigen/seqdata/"
+
+# select libs 
+samplenames=(`cat $samples`)
+INPREFIX=${samplenames[${PBS_ARRAYID}*2]} #index start from 0
+GENOME=${samplenames[${PBS_ARRAYID}*2+1]}
+OUTDIR="${WORKDIR}${INPREFIX}"
+mkdir -p $OUTDIR
+
+
+fastq1="${FASTQDIR}/${INPREFIX}_R1.fastq.gz"
+fastq2="${FASTQDIR}/${INPREFIX}_R2.fastq.gz"
+echo $fastq1
+[[ ! -f $fastq1 ]] && { echo "fastq1 not found"; exit 0; }
+[[ ! -f $fastq2 ]] && { echo "fastq2 not found"; exit 0; } 
+
+
+############################################################
+# runPipeline
+############################################################
+source activate /home/opoirion/prog/conda_env
+export PATH=$PATH:/home/opoirion/go/local/bin/
+export PICARDHOME=/projects/ps-epigen/software/miniconda3/envs/bds_atac/share/picard-2.18.2-0/
+
+## set up genome and args
+if [ $GENOME = 'hg19' ] || [ $GENOME = 'hg38' ]
+then
+    GENOME="male.hg19"
+    BOWTIE_INDEX="/home/opoirion/data/ref_genomes/human/male.hg19/Bowtie2Index"
+    BOWTIE_INDEX_NAME="male.hg19.fa"
+    REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19_all_genes_refseq_TSS_promoter_2000.bed"
+    CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/human/male.hg19/male.hg19.refSeq_promoter.bed"
+elif [ $GENOME = 'mm10' ]
+then
+    BOWTIE_INDEX="/home/opoirion/data/ref_genomes/mouse/mm10/Bowtie2Index"
+    BOWTIE_INDEX_NAME="mm10"    
+    REFSEQ_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_all_genes_refseq_TSS_promoter_2000.bed"
+    CONSEC_PROMOTER="/home/opoirion/data/ref_genomes/mouse/mm10/mm10_consecutive_promoters.bed"
+fi
+
+
+## run
+python /home/opoirion/code/snATAC/snATAC_pipeline/from_scratch_pipeline.py \
+       -output_name $INPREFIX \
+       -output_path $OUTDIR \
+       -fastq_R1 $fastq1 -fastq_R2 $fastq2 \
+       -ref_genome $GENOME \
+       -aligner_to_use bowtie2 \
+       -threads_number 16 \
+       -bowtie_index_path $BOWTIE_INDEX \
+       -bowtie_index_name $BOWTIE_INDEX_NAME \
+       -refseq_promoter_file $REFSEQ_PROMOTER \
+       -consecutive_promoter_file $CONSEC_PROMOTER \
+       -bam_bigwig_for_top_clustering True \
+       -perform_chromVAR_analysis True \
+       -compute_TSS_enrichment True \
+       -format_output_for_webinterface True \
+       -workflow_version v2 \       
+       -java /home/opoirion/prog/jdk-10.0.1/bin/java 
+wait
+
+
+# add .finished.txt tag
+touch ${OUTDIR}/.finished.txt
+
+# transfer results
+rsync -azr ${WORKDIR}${INPREFIX} ~/data/outputs/snATAC/
+
+
+# qsub -t 1-15%1 
+# use -v genome to tell which genome to run
