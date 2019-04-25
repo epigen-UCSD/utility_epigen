@@ -36,23 +36,53 @@ fastq_dir="/projects/ps-epigen/seqdata/${ftp_addr##*//}"
 reads_cnt_file="${fastq_dir}/reads_cnt.tsv"
 >$reads_cnt_file
 
+libs=($(ls -1  *_R1_*.fastq.gz | sed 's/_S[0-9]*.*//g'|grep -v Undet|sort|uniq))
+
 cd $fastq_dir
+if ls  *_R3_*fastq.gz 1> /dev/null 2>&1; then IS_10x=T;fi
+if ls  *_R2_*fastq.gz 1> /dev/null 2>&1; then IS_PE=T;fi
+nlane=$(ls -1 ${libs}*_R1*.fastq.gz |wc -l)
 
-for i in *_R1_*.fastq.gz
+
+
+for lib in ${libs[@]}
 do
-    if [ ${i:0:12} != "Undetermined" ]
+    echo $lib
+    if [[ ! -z  $IS_PE && $nlane -gt 1 ]] #handle PE  & more than 1 lane
     then
-
-        lib=${i%_S[0-9]*}
-        echo $lib
-        if [ -f  ${i/_R1_/_R2_} ]
+        echo -e "cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R1.fastq.gz"|bash
+        if [ ! -z $IS_10x ]
         then
-            ln -s ${fastq_dir}/$i /home/zhc268/data/seqdata/${lib}_R1.fastq.gz
-            ln -s ${fastq_dir}/${i/_R1_/_R2_} /home/zhc268/data/seqdata/${lib}_R2.fastq.gz
-        else
-            ln -s ${fastq_dir}/$i /home/zhc268/data/seqdata/${lib}.fastq.gz
+             mkdir -p /home/zhc268/data/seqdata/${lib}
+             ln -sf ${fastq_dir}/${lib}*.fastq.gz /home/zhc268/data/seqdata/${lib}/
+             echo -e "cat  ${fastq_dir}/${lib}*R3*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz"|bash
+         else
+             echo -e "cat  ${fastq_dir}/${lib}*R2*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz"|bash
         fi
-        nreads=$(zcat $i | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file & sleep 1
+        nreads=$(zcat /home/zhc268/data/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
+    elif [[ ! -z  $IS_PE && $nlane -eq 1 ]] # PE & only one lane 
+    then
+        ln -sf ${fastq_dir}/${lib}*R1*.fastq.gz /home/zhc268/data/seqdata/${lib}_R1.fastq.gz
+        if [ ! -z $IS_10x ]
+        then
+             mkdir -p /home/zhc268/data/seqdata/${lib}
+             ln -sf ${fastq_dir}/${lib}*.fastq.gz /home/zhc268/data/seqdata/${lib}/
+             ln -sf ${fastq_dir}/${lib}*R3*.fastq.gz  /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
+        else
+             ln -sf  ${fastq_dir}/${lib}*R2*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
+        fi
+        nreads=$(zcat /home/zhc268/data/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
+    fi
+
+    
+    if [[ -z $IS_PE && $nlane -gt 1 ]] #handle SE & more than 1 lane
+    then
+        cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /home/zhc268/data/seqdata/${lib}.fastq.gz
+        nreads=$(zcat /home/zhc268/data/seqdata/${lib}.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
+    elif [[ -z $IS_PE && $nlane -eq 1 ]] #handle SE & more than 1 lane
+    then
+         ln -sf ${fastq_dir}/${lib}*R1*.fastq.gz /home/zhc268/data/seqdata/${lib}.fastq.gz
+         nreads=$(zcat /home/zhc268/data/seqdata/${lib}.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
     fi
 done
 wait

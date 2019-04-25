@@ -23,7 +23,7 @@ samplenames=(`cat $samples`)
 INPREFIX=${samplenames[${PBS_ARRAYID}*4]} #index start from 0
 GENOME=${samplenames[${PBS_ARRAYID}*4+1]}
 READ=${samplenames[${PBS_ARRAYID}*4+2]}
-GROUP=${samplenames[${PBS_ARRAYID}*4+3]}
+IS_INPUT=${samplenames[${PBS_ARRAYID}*4+3]}
 
 # split name into subnames
 subnames=($(echo $INPREFIX|awk -v FS='_' '{for(i=1;i<=NF;i++) print $i}'))

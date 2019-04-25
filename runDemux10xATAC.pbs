@@ -32,7 +32,7 @@ mkdir -p ${out_dir}
 
 ## prepair reads_cnt_file
 reads_cnt_file="${out_dir}/reads_cnt.tsv"
->$reads_cnt_file
+[[ ! -f $reads_cnt_file ]] && >$reads_cnt_file
 
 ## samplesheet
 samplesheet="${out_dir}/SampleSheet_I1.csv"
@@ -41,7 +41,7 @@ libs=$(awk -v FS=',' '(NR>1){print $2}' $samplesheet)
 ## run mkfastq 
 cd $run_dir
 export PATH=/projects/ps-epigen/software/cellranger-atac-1.0.1/:$PATH
-cellranger-atac mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc 
+cellranger-atac mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc  #--use-bases-mask Y101,I8n,Y16,Y101
 
 ## transfer/link data
 ln -sf ${out_dir_sys}/Stats $out_dir
@@ -60,9 +60,10 @@ wait
 # update status to finish or warning @ VM
 ############################################################
 cmd="source activate django; python \$(which updateReadsNumberPerRun.py) -f $flowcell_id -i $reads_cnt_file; python \$(which updateRunReads.py) -f $flowcell_id"
-ssh zhc268@epigenomics.sdsc.edu $cmd
+job1=$(ssh zhc268@epigenomics.sdsc.edu $cmd)
 
 ############################################################
 # run 10x pipeline
 ############################################################
+
 #qsub -t 0-1 -v samples=${HOME}/runlogs/run_2019-01-22_10xatac_modifiedPeakPar.txt $(which run10xPipeline.pbs)
