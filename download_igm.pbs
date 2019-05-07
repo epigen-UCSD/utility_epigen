@@ -36,9 +36,8 @@ fastq_dir="/projects/ps-epigen/seqdata/${ftp_addr##*//}"
 reads_cnt_file="${fastq_dir}/reads_cnt.tsv"
 >$reads_cnt_file
 
-libs=($(ls -1  *_R1_*.fastq.gz | sed 's/_S[0-9]*.*//g'|grep -v Undet|sort|uniq))
-
 cd $fastq_dir
+libs=($(ls -1  *_R1_*.fastq.gz | sed 's/_S[0-9]*.*//g'|grep -v Undet|sort|uniq))
 if ls  *_R3_*fastq.gz 1> /dev/null 2>&1; then IS_10x=T;fi
 if ls  *_R2_*fastq.gz 1> /dev/null 2>&1; then IS_PE=T;fi
 nlane=$(ls -1 ${libs}*_R1*.fastq.gz |wc -l)

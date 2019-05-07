@@ -84,17 +84,17 @@ then
     ## fastqs
     LIBS=($(echo $SAMPLES |awk -v FS=',' -v OFS='\t' '{for(i=1;i<=NF;i++) print $i}'))
     id=${LIBS[0]}
-    r1=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R1*.fastq.gz")
-    r2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R3*.fastq.gz")
-    i1=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_I1*.fastq.gz")
-    i2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R2*.fastq.gz")
+    r1=$(find ${FASTQDIR}/${id}/ -name "${id}*_R1*.fastq.gz")
+    r2=$(find ${FASTQDIR}/${id}/ -name "${id}*_R3*.fastq.gz")
+    i1=$(find ${FASTQDIR}/${id}/ -name "${id}*_I1*.fastq.gz")
+    i2=$(find ${FASTQDIR}/${id}/ -name "${id}*_R2*.fastq.gz")
     echo $r1
     
     id=${LIBS[1]}
-    r1_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R1*.fastq.gz")
-    r2_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R3*.fastq.gz")
-    i1_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_I1*.fastq.gz")
-    i2_2=$(find ${FASTQDIR}/${id}/ -name "${id}*L001_R2*.fastq.gz")
+    r1_2=$(find ${FASTQDIR}/${id}/ -name "${id}*_R1*.fastq.gz"|head -n1)
+    r2_2=$(find ${FASTQDIR}/${id}/ -name "${id}*_R3*.fastq.gz"|head -n1 )
+    i1_2=$(find ${FASTQDIR}/${id}/ -name "${id}*_I1*.fastq.gz"|head -n1 )
+    i2_2=$(find ${FASTQDIR}/${id}/ -name "${id}*_R2*.fastq.gz"|head -n1)
     echo $r1_2
     
     ## set up genome and args
@@ -123,7 +123,7 @@ then
            -fastq_I1_additional ${i1_2} -fastq_I2_additional ${i2_2} \
            -fastq_R1_additional ${r1_2} -fastq_R2_additional ${r2_2} \
            -max_nb_mistake 0 \
-           -additional_lanes 2 3 4 \
+           -additional_lanes_regex "_S*_L00" \
            -compute_TSS_enrichment True \
            -index_barcodes $p7 \
            -all_barcodes i5 \
@@ -133,6 +133,7 @@ then
            -bowtie_index_name $BOWTIE_INDEX_NAME \
            -refseq_promoter_file $REFSEQ_PROMOTER \
            -threads_number 16 \
+           -all_lanes True \
            -workflow_version v2 \
            -format_output_for_webinterface True \           
            -min_number_of_unaligned_reads_per_cell 1000 \
@@ -195,7 +196,7 @@ then
            -fastq_I1 $i1 -fastq_I2 $i2 \
            -fastq_R1 $r1 -fastq_R2 $r2 \
            -max_nb_mistake 0 \
-           -additional_lanes 2 3 4 \
+           -additional_lanes_regex "_S*_L00" \
            -compute_TSS_enrichment True \
            -index_barcodes $p7 \
            -all_barcodes i5 \
@@ -205,6 +206,7 @@ then
            -bowtie_index_name $BOWTIE_INDEX_NAME \
            -refseq_promoter_file $REFSEQ_PROMOTER \
            -threads_number 16 \
+           -all_lanes True \           
            -workflow_version v2 \
            -min_number_of_unaligned_reads_per_cell 1000 \
            -perform_chromVAR_analysis True \

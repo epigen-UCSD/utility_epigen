@@ -3,7 +3,7 @@
 #PBS -N django_10xPipeline
 #PBS -l nodes=1:ppn=16
 #PBS -l walltime=24:00:00
-#PBS -l pmem=6gb
+#PBS -l mem=96gb
 #PBS -o /home/zhc268/logs/run_10xMkpipeline.out
 #PBS -e /home/zhc268/logs/run_10xMkpipeline.err
 #PBS -V
@@ -45,7 +45,7 @@ fastqs=$(echo $SAMPLE| awk -v FS=',' -v d="${FASTQDIR}" '{ for(i=1;i<=NF-1;i++) 
 
 
 # runPipeline
-cellranger-atac count --id=$INPREFIX --fastqs=$fastqs --sample $SAMPLE --reference=$genome_dir --localcores=16  --mempercore=6
+cellranger-atac count --id=$INPREFIX --fastqs=$fastqs --sample $SAMPLE --reference=$genome_dir --localcores=16  --mempercore=5
 wait
 
 # transfer results
