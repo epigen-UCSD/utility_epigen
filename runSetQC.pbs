@@ -19,7 +19,7 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 ## run setQC @TSCC
 ############################################################
 [[ $type = "atac_chip" ]] && snap="-c true"
-setQC_wrapper.sh -n $set_id -t $type $snap  2>&1| tee -a /projects/ps-epigen/logs/app/${set_id}.log
+setQC_wrapper.sh -n $set_id -t $type -s $set_name $snap  2>&1| tee -a /projects/ps-epigen/logs/app/${set_id}.log
 
 ############################################################
 # update status to finish or warning @ VM
