@@ -2,7 +2,7 @@
 #PBS -q condo
 #PBS -N download_igm
 #PBS -l nodes=1:ppn=1
-#PBS -l walltime=2:00:00
+#PBS -l walltime=6:00:00
 #PBS -V
 #PBS -m abe
 #PBS -A epigen-group
@@ -40,40 +40,42 @@ cd $fastq_dir
 libs=($(ls -1  *_R1_*.fastq.gz | sed 's/_S[0-9]*.*//g'|grep -v Undet|sort|uniq))
 if ls  *_R3_*fastq.gz 1> /dev/null 2>&1; then IS_10x=T;fi
 if ls  *_R2_*fastq.gz 1> /dev/null 2>&1; then IS_PE=T;fi
-nlane=$(ls -1 ${libs}*_R1*.fastq.gz |wc -l)
 
-
-
+## count reads & make sybolic links for each lib
 for lib in ${libs[@]}
 do
     echo $lib
-    if [[ ! -z  $IS_PE && $nlane -gt 1 ]] #handle PE  & more than 1 lane
+    nlane=$(ls -1 ${lib}_S*_R1*.fastq.gz |wc -l)
+    ## handle PE  
+    if [[ ! -z  $IS_PE && $nlane -gt 1 ]] ## more than 1 lane
     then
         echo -e "cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R1.fastq.gz"|bash
-        if [ ! -z $IS_10x ]
+        if [ ! -z $IS_10x ] ## 10x
         then
              mkdir -p /home/zhc268/data/seqdata/${lib}
              ln -sf ${fastq_dir}/${lib}*.fastq.gz /home/zhc268/data/seqdata/${lib}/
              echo -e "cat  ${fastq_dir}/${lib}*R3*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz"|bash
-         else
+        elif [ -z $IS_10x ] ## bulk
+        then
              echo -e "cat  ${fastq_dir}/${lib}*R2*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz"|bash
         fi
         nreads=$(zcat /home/zhc268/data/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
-    elif [[ ! -z  $IS_PE && $nlane -eq 1 ]] # PE & only one lane 
+    elif [[ ! -z  $IS_PE && $nlane -eq 1 ]] # only one lane 
     then
         ln -sf ${fastq_dir}/${lib}*R1*.fastq.gz /home/zhc268/data/seqdata/${lib}_R1.fastq.gz
-        if [ ! -z $IS_10x ]
+        if [ ! -z $IS_10x ] ## 10x
         then
              mkdir -p /home/zhc268/data/seqdata/${lib}
              ln -sf ${fastq_dir}/${lib}*.fastq.gz /home/zhc268/data/seqdata/${lib}/
              ln -sf ${fastq_dir}/${lib}*R3*.fastq.gz  /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
-        else
+        elif [ -z $IS_10x ] ## bulk 
+        then
              ln -sf  ${fastq_dir}/${lib}*R2*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
         fi
         nreads=$(zcat /home/zhc268/data/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
     fi
 
-    
+    ## handle  SE 
     if [[ -z $IS_PE && $nlane -gt 1 ]] #handle SE & more than 1 lane
     then
         cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /home/zhc268/data/seqdata/${lib}.fastq.gz

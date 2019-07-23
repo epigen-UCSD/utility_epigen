@@ -12,7 +12,7 @@ to="/projects/ps-epigen/outputs/"
 [[ -d "$from" ]] &&  cd $from
 
 # trimed fastq
-find . -name "${sample}*trim.fastq.gz" -exec rsync -uv --progress {} /projects/ps-epigen/seqdata/ \; 
+#find . -name "${sample}*trim.fastq.gz" -exec rsync -uv --progress {} /projects/ps-epigen/seqdata/ \; 
 
 # bam files 
 find . -name "${sample}*bam*"  | xargs -I '{}' rsync -uv --progress '{}' ${to}"bams"
