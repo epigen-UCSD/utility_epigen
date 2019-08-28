@@ -25,7 +25,7 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 # transfer data 
 ############################################################
 cd  /home/zhc268/data/seqdata
-cmd="wget  -r -q  --user $user --password $pass  $ftp_addr"
+cmd="wget  -r -l 10 -q --user $user --password $pass  ${ftp_addr}/*"
 echo $cmd 
 echo $cmd | bash
 
@@ -37,6 +37,15 @@ reads_cnt_file="${fastq_dir}/reads_cnt.tsv"
 >$reads_cnt_file
 
 cd $fastq_dir
+
+## not demultiplexed 
+##if [ ! -f *_R1_*.fastq.gz ] 
+##then
+##    qsub -v flowcell_id=,run_dir=${fastq_dir}
+##fi
+## TODO 
+
+## demultiplexed 
 libs=($(ls -1  *_R1_*.fastq.gz | sed 's/_S[0-9]*.*//g'|grep -v Undet|sort|uniq))
 if ls  *_R3_*fastq.gz 1> /dev/null 2>&1; then IS_10x=T;fi
 if ls  *_R2_*fastq.gz 1> /dev/null 2>&1; then IS_PE=T;fi
@@ -70,7 +79,7 @@ do
              ln -sf ${fastq_dir}/${lib}*R3*.fastq.gz  /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
         elif [ -z $IS_10x ] ## bulk 
         then
-             ln -sf  ${fastq_dir}/${lib}*R2*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
+             ln -sf  ${fastq_dir}/${lib}*R2*.fastq.gz  /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
         fi
         nreads=$(zcat /home/zhc268/data/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
     fi
