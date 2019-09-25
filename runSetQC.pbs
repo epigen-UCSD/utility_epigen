@@ -19,6 +19,7 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 ## run setQC @TSCC
 ############################################################
 [[ $type = "atac_chip" ]] && snap="-c true"
+[[ $type = "chip" ]] && snap="-c true"
 setQC_wrapper.sh -n $set_id -t $type $snap  2>&1| tee -a /projects/ps-epigen/logs/app/${set_id}.log
 
 ############################################################
@@ -26,6 +27,7 @@ setQC_wrapper.sh -n $set_id -t $type $snap  2>&1| tee -a /projects/ps-epigen/log
 ############################################################
 ver=$(cd ~/software/setQC/; git describe --tags)
 [[ $type = "atac_chip" ]] && nm=_$type
+[[ $type = "chip" ]] && nm=_$type
 html_file="/projects/ps-epigen/outputs/setQCs/${set_id}/$(cat ~/data/outputs/setQCs/${set_id}.rstr.txt)/setQC_report${nm}.html"
 status='-1'
 [[ -f $html_file ]] && status='3'

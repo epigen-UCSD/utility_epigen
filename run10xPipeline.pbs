@@ -45,12 +45,15 @@ fastqs=$(echo $SAMPLE| awk -v FS=',' -v d="${FASTQDIR}" '{ for(i=1;i<=NF-1;i++) 
 
 
 # runPipeline
+mkdir -p ~/data/outputs/10xATAC/$INPREFIX
+[[ -f ~/data/outputs/10xATAC/${INPREFIX}/.inqueue ]] && rm  ~/data/outputs/10xATAC/${INPREFIX}/.inqueue 
+touch ~/data/outputs/10xATAC/${INPREFIX}/.inprocess
 cellranger-atac count --id=$INPREFIX --fastqs=$fastqs --sample $SAMPLE --reference=$genome_dir --localcores=16  --mempercore=5
 wait
 
 # transfer results
 rsync -azr ${WORKDIR}${INPREFIX} ~/data/outputs/10xATAC/
-
+rm  ~/data/outputs/10xATAC/${INPREFIX}/.inprocess
 ## addtional check
 #[[ -z $(find ${OUTDIR}/qc/rep1 -name "*_qc.txt") ]]  && { echo  "pipeline interrupted"; exit 0; }
 
