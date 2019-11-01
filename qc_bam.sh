@@ -11,7 +11,9 @@ out=${bam%.raw.bam}
 
 [[ ! -f $out".score.txt" ]] && samtools view $bam | awk '{print $2,$5}' > $out".score.txt" #flag + qscore
 
-Rscript $(which plotQC.R) $out".score.txt" #flag + qscore
+Rscript $(which plotQC.R) $out".score.txt" && rm $out".score.txt" 
+
+#flag + qscore
 
 
 

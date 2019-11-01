@@ -13,7 +13,8 @@ require(limma)
 a <- vennCounts(cbind(
     mpq.fail = (scores$Score <=30),
     F1804.fail = (bitwAnd(1804,scores$Flag)>0),
-    Improper = !(bitwAnd(2,scores$Flag)>0)))
+    Improper.pair = !(bitwAnd(2,scores$Flag)>0)))
+a[,'Counts']<- format(a[,'Counts'],big.mark = ',',scientific = F)
 
 ## plot
 pdf(file=sub(".txt",".venn.pdf",fn))
