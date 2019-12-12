@@ -12,7 +12,7 @@
 
 # -v pass parameters: samples
 
-export PATH=/projects/ps-epigen/software/cellranger-atac-1.1.0/:$PATH
+export PATH=/projects/ps-epigen/software/cellranger-atac-1.2.0/:$PATH
 WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_TA/"
 FASTQDIR="/projects/ps-epigen/seqdata/"
 
@@ -28,9 +28,11 @@ cd $WORKDIR
 # determine genomes
 case $GENOME in
     mm10)
-        genome_dir="/home/zhc268/data/GENOME/mm10/refdata-cellranger-atac-mm10-1.1.0";;
+        genome_dir="/home/zhc268/data/GENOME/mm10/refdata-cellranger-atac-mm10-1.2.0";;
     hg38)
-        genome_dir="/home/zhc268/data/GENOME/hg38/refdata-cellranger-atac-GRCh38-1.1.0";;
+        genome_dir="/home/zhc268/data/GENOME/hg38/refdata-cellranger-atac-GRCh38-1.2.0";;
+    hg19)
+        genome_dir="/home/zhc268/data/GENOME/hg38/refdata-cellranger-atac-hg19-1.2.0";;
     *)
         echo "wrong genome input: $GENOME"
         exit 0;;

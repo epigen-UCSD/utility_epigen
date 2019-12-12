@@ -40,7 +40,8 @@ libs=$(awk -v FS=',' '(NR>1){print $2}' $samplesheet)
 
 ## run mkfastq 
 cd $run_dir
-export PATH=/projects/ps-epigen/software/cellranger-atac-1.1.0/:$PATH
+export PATH=/projects/ps-epigen/software/cellranger-atac-1.2.0/:$PATH
+echo -e "cellranger-atac mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc $extraPars #--use-bases-mask Y50,I8n*,Y16,Y50"
 cellranger-atac mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc $extraPars #--use-bases-mask Y50,I8n*,Y16,Y50
 
 ## transfer/link data
