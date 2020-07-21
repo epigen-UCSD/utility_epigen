@@ -6,7 +6,7 @@
 [[ $# -eq 0 ]] && { echo "ERROR:Need input"; exit 1; }
 sample=$1
 
-from=/oasis/tscc/scratch/$(whoami)/outputs/${sample}
+from="/oasis/tscc/scratch/$(whoami)/outputs/${sample}"
 to="/projects/ps-epigen/outputs/"
 
 [[ -d "$from" ]] &&  cd $from
