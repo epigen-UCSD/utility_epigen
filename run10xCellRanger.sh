@@ -11,6 +11,10 @@
 #PBS -A epigen-group
 
 # -v pass parameters: samples
+samples=$1
+PBS_ARRAYID=0
+genome_path=$2
+
 
 export PATH=/projects/ps-epigen/software/cellranger-3.0.2/:$PATH
 WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_TA/"
