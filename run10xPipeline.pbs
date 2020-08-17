@@ -48,24 +48,23 @@ fastqs=$(echo $SAMPLE| awk -v FS=',' -v d="${FASTQDIR}" '{ for(i=1;i<=NF-1;i++) 
 
 # runPipeline
 mkdir -p ~/data/outputs/10xATAC/$INPREFIX
-[[ -f ~/data/outputs/10xATAC/${INPREFIX}/.inqueue ]] && rm  ~/data/outputs/10xATAC/${INPREFIX}/.inqueue 
-touch ~/data/outputs/10xATAC/${INPREFIX}/.inprocess
+[[ -f ~/data/outputs/10xATAC/${INPREFIX}/.inqueue ]] && rm  ~/data/outputs/10xATAC/${INPREFIX}/.inqueue
+[[ -f ~/data/outputs/10xATAC/${INPREFIX}/.inprocess ]] && rm  ~/data/outputs/10xATAC/${INPREFIX}/.inprocess
+cmd="source activate django; python \$(which updateSingleCellStatus.py) -seqid $INPREFIX -status InProcess;"
+job1=$(ssh zhc268@epigenomics.sdsc.edu $cmd)
+
 cellranger-atac count --id=$INPREFIX --fastqs=$fastqs --sample $SAMPLE --reference=$genome_dir --localcores=16  --mempercore=5
 wait
 
 # transfer results
 rsync -azru ${WORKDIR}${INPREFIX} ~/data/outputs/10xATAC/
-rm  ~/data/outputs/10xATAC/${INPREFIX}/.inprocess
+
 ## addtional check
 #[[ -z $(find ${OUTDIR}/qc/rep1 -name "*_qc.txt") ]]  && { echo  "pipeline interrupted"; exit 0; }
 
-
-# runFastQC & fastq_screen
-#runFastQC_screen.sh  $INPREFIX
-#results_transfer.sh $INPREFIX $(whoami)
-
-# add .finished.txt tag
+# update status to finish or warning @ VM
+cmd="source activate django; python \$(which updateSingleCellStatus.py) -seqid $INPREFIX -status Yes;"
+job1=$(ssh zhc268@epigenomics.sdsc.edu $cmd)
 
 
-#qsub -t 0-3 -v samples=$(pwd)/run_2019-04-25_10xatac.txt $(which run10xPipeline.pbs)
 
