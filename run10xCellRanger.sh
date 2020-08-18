@@ -28,6 +28,9 @@ SAMPLE=${samplenames[${PBS_ARRAYID}*3+1]}
 GENOME=${samplenames[${PBS_ARRAYID}*3+2]}
 cd $WORKDIR
 
+# remove existed data
+[[ -f $WORKDIR$INPREFIX"/"$INPREFIX".mri.tgz" ]]  && rm -rf $WORKDIR$INPREFIX
+
 # prepare fastqs, comma seperated values
 fastqs=$(echo $SAMPLE| awk -v FS=',' -v d="${FASTQDIR}" '{ for(i=1;i<=NF-1;i++) {printf "%s,", d$i};print d$NF;}')
 
