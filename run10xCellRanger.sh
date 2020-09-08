@@ -16,7 +16,7 @@ PBS_ARRAYID=0
 genome_path=$2
 
 
-export PATH=/projects/ps-epigen/software/cellranger-3.0.2/:$PATH
+export PATH=/projects/ps-epigen/software/cellranger-4.0.0/:$PATH
 WORKDIR="/oasis/tscc/scratch/$(whoami)/outputs_TA/"
 FASTQDIR="/projects/ps-epigen/seqdata/"
 
