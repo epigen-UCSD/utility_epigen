@@ -14,8 +14,8 @@
 ## update status to job submitted @VM
 ############################################################
 
-#flowcell_id=$1
-#run_dir=$2
+flowcell_id=$1
+run_dir=$2
 
 cmd="source activate django;python \$(which updateRunStatus.py) -s '1' -f $flowcell_id"
 
@@ -50,7 +50,7 @@ libs=$(awk -v FS=',' '(NR>1){print $2}' $samplesheet)
 cd $run_dir
 
 ## 1. for single indexes
-if [[ $(grep SI-GA $samplesheet) ]] ##&& '1' = '2' ]]
+if [[ $(grep SI-GA $samplesheet) && '1' = '2' ]]
 then
     echo "Running single index" 
     export PATH=/projects/ps-epigen/software/cellranger-3.0.2/:$PATH
