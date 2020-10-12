@@ -51,7 +51,7 @@ cd $run_dir
 if [[ $(grep SI-GA $samplesheet) ]] ##&& '1' = '2' ]]
 then
     echo "Running single index" 
-    export PATH=/projects/ps-epigen/software/cellranger-3.0.2/:$PATH
+    export PATH=/projects/ps-epigen/software/cellranger-3.1.0/:$PATH
     ## delete last demux info 
     [[ -d ${run_dir}/single ]] && rm -r ${run_dir}/single  # delete existing folder
     [[ -f ${run_dir}/__single.mro ]] && rm ${run_dir}/__single.mro  # delete existing folder
@@ -62,7 +62,7 @@ then
     
     [[ $(grep SI-TT $samplesheet) ]] && extraParsVal2="--ignore-dual-index"
     [[ -f ${out_dir}/extraPars.txt ]] && extraParsVal=$(cat ${out_dir}/extraPars.txt)
-    echo -e    " cellranger mkfastq --run=$run_dir  --localcores=16 --csv $ga --qc --id single  $extraParsVal $extraParsVal2"
+    echo -e    "cellranger mkfastq --run=$run_dir  --localcores=16 --csv $ga --qc --id single  --mempercore=5 $extraParsVal $extraParsVal2"
     cellranger mkfastq --run=$run_dir  --localcores=16 --csv $ga --qc --id single --mempercore=5  $extraParsVal $extraParsVal2
     ## output fastq folder assigned by --id 
     out_dir_sys=${run_dir}/single/outs/fastq_path/$flowcell_id
@@ -94,9 +94,9 @@ then
 
     ## only consider extraPars for pure dual index runs
     [[ $(grep SI-GA $samplesheet) ]] && extraParsVal2="--filter-dual-index"
-    [[ -f ${out_dir}/extraPars.txt ]] && [[ ! $(grep SI-GA $samplesheet) ]] && extraParsVal=$(cat ${out_dir}/extraPars.txt)
-    echo -e " cellranger mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc $extraParsVal $extraParsVal2"
-    cellranger mkfastq --run=$run_dir  --localcores=16 --mempercore=5 --csv $samplesheet --qc $extraParsVal $extraParsVal2
+    [[ -f ${out_dir}/extraPars.txt ]] && [[ ! $(grep SI-GA $samplesheet) ]] && extraParsVal3=$(cat ${out_dir}/extraPars.txt)
+    echo -e " cellranger mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2"
+    cellranger mkfastq --run=$run_dir  --localcores=16 --mempercore=5 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2
 
     ## transfer/link data
     out_dir_sys=${run_dir}/${flowcell_id}/outs/fastq_path/$flowcell_id    

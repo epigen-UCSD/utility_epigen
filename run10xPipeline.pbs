@@ -63,7 +63,7 @@ rsync -azru ${WORKDIR}${INPREFIX} ~/data/outputs/10xATAC/
 #[[ -z $(find ${OUTDIR}/qc/rep1 -name "*_qc.txt") ]]  && { echo  "pipeline interrupted"; exit 0; }
 
 # update status to finish or warning @ VM
-cmd="source activate django; python \$(which updateSingleCellStatus.py) -seqid $INPREFIX -status Yes;"
+cmd="source activate django; python \$(which updateSingleCellStatus.py) -seqid $INPREFIX -tenx_status Yes;"
 job1=$(ssh zhc268@epigenomics.sdsc.edu $cmd)
 
 
