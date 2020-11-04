@@ -37,9 +37,11 @@ reads_cnt_file="${out_dir}/reads_cnt.tsv"
 samplesheet="${out_dir}/SampleSheet_I1.csv"
 samplesheet_rna_expand="${out_dir}/SampleSheet_rna_expand.csv"
 samplesheet_rna="${out_dir}/SampleSheet_rna.csv"
+samplesheet_rna_TT="${out_dir}/SampleSheet_rna_TT.csv"
 samplesheet_atac="${out_dir}/SampleSheet_atac.csv"
-grep -v "SI-NA" $samplesheet > $samplesheet_rna  # GA- atac
-grep -v "SI-GA" $samplesheet > $samplesheet_atac
+grep  "SI-GA" $samplesheet|sed '1 i\Lane,Sample,Index' > $samplesheet_rna  # GA- single-index RNA
+grep  "SI-TT" $samplesheet|sed '1 i\Lane,Sample,Index' > $samplesheet_rna_TT  # TT- dual-index RNA
+grep  "SI-NA" $samplesheet|sed '1 i\Lane,Sample,Index' > $samplesheet_atac #NA-atac
 
 ## run mkfastq 
 cd $run_dir

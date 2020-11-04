@@ -30,7 +30,7 @@ bigwig=${prefix}.bw
 
 
 awk  -v OFS='\t' '{if($6=="+"){$3=$2+75;$2=$2-75} else {$2=$3-75;$3=$3+75};print $1,$2,$3}'  $tag |\
-    slopBed -i - -g $chrsz -b 0 >$bed_srt
+    slopBed -i - -g $chrsz -b 0 | grep -P "chr[0-9XY]+\t">$bed_srt
 sort -k 1,1 $bed_srt | bedtools genomecov -i -  -bg -g $chrsz -scale $scale > $bdg
 sort -k1,1 -k2,2n $bdg > $bdg_srt
 bedGraphToBigWig $bdg_srt $chrsz $bigwig
