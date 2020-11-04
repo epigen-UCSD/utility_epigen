@@ -50,12 +50,12 @@ cd $run_dir
 ## 1. for single indexes
 if [[ $(grep SI-GA $samplesheet) ]] ##&& '1' = '2' ]]
 then
-    echo "Running single index" 
+    echo "Running single index"
     export PATH=/projects/ps-epigen/software/cellranger-3.1.0/:$PATH
-    ## delete last demux info 
+    ## delete last demux info
     [[ -d ${run_dir}/single ]] && rm -r ${run_dir}/single  # delete existing folder
     [[ -f ${run_dir}/__single.mro ]] && rm ${run_dir}/__single.mro  # delete existing folder
-
+    
     
     ga="${out_dir}/SampleSheet_GA.csv"
     grep -v SI-TT $samplesheet > $ga
@@ -64,7 +64,7 @@ then
     [[ -f ${out_dir}/extraPars.txt ]] && extraParsVal=$(cat ${out_dir}/extraPars.txt)
     echo -e    "cellranger mkfastq --run=$run_dir  --localcores=16 --csv $ga --qc --id single  --mempercore=5 $extraParsVal $extraParsVal2"
     cellranger mkfastq --run=$run_dir  --localcores=16 --csv $ga --qc --id single --mempercore=5  $extraParsVal $extraParsVal2
-    ## output fastq folder assigned by --id 
+    ## output fastq folder assigned by --id
     out_dir_sys=${run_dir}/single/outs/fastq_path/$flowcell_id
     ln -sf ${out_dir_sys}/Stats $out_dir
     
@@ -73,35 +73,35 @@ then
     do
         echo $i
         ln -sf ${out_dir_sys}/${i} ~/data/seqdata/
-        # for counting reads 
-        tempI1=$(mktemp)   
-        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1 
+        # for counting reads
+        tempI1=$(mktemp)
+        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1
         nreads=$(zcat $tempI1 | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
-    done 
+    done
 fi
 
 
-## 2. for dual index 
-if grep SI-TT $samplesheet
+## 2. for dual index
+if [[ $(grep SI-TT $samplesheet) ]]
 then
-    echo "Running dual indexes" 
+    echo "Running dual indexes"
     export PATH=/projects/ps-epigen/software/cellranger-4.0.0/:$PATH
     
-    ## delete last demux info 
-    [[ -d ${run_dir}/${flowcell_id} ]] && rm -r ${run_dir}/${flowcell_id}  # delete existing folder
+    ## delete last demux info
+    [[ ! -z ${flowcell_id} ]] && [[ -d ${run_dir}/${flowcell_id} ]] && rm -r ${run_dir}/${flowcell_id}  # delete existing folder
     [[ -f ${run_dir}/__${flowcell_id}.mro ]] && rm ${run_dir}/__${flowcell_id}.mro  # delete existing folder
-
-
+    
+    
     ## only consider extraPars for pure dual index runs
     [[ $(grep SI-GA $samplesheet) ]] && extraParsVal2="--filter-dual-index"
     [[ -f ${out_dir}/extraPars.txt ]] && [[ ! $(grep SI-GA $samplesheet) ]] && extraParsVal3=$(cat ${out_dir}/extraPars.txt)
     echo -e " cellranger mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2"
     cellranger mkfastq --run=$run_dir  --localcores=16 --mempercore=5 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2
-
+    
     ## transfer/link data
-    out_dir_sys=${run_dir}/${flowcell_id}/outs/fastq_path/$flowcell_id    
+    out_dir_sys=${run_dir}/${flowcell_id}/outs/fastq_path/$flowcell_id
     ln -sf ${out_dir_sys}/Stats $out_dir
-
+    
     tt="${out_dir}/SampleSheet_TT.csv"
     grep -v SI-GA $samplesheet > $tt
     libs=$(awk -v FS=',' '(NR>1){print $2}' $tt)
@@ -109,20 +109,20 @@ then
     for i in $libs
     do
         #cp -r ${out_dir_sys}/$flowcell_id/${i} ~/data/seqdata/
-        echo $i 
+        echo $i
         mkdir -p ${out_dir_sys}/${i}
         ln -sf ${out_dir_sys}/${i}_S*fastq.gz ${out_dir_sys}/${i}/
         ln -sf ${out_dir_sys}/${i} ~/data/seqdata/
-
-        # for counting reads 
-        tempI1=$(mktemp)   
-        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1 
+        
+        # for counting reads
+        tempI1=$(mktemp)
+        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1
         nreads=$(zcat $tempI1 | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
-    done 
-
+    done
+    
 fi
 
-wait 
+wait
 ############################################################
 # update status to finish or warning @ VM
 ############################################################

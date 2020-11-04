@@ -14,8 +14,6 @@
 ## update status to job submitted @VM
 ############################################################
 export PATH=/projects/ps-epigen/software/cellranger-4.0.0/:$PATH
-export PATH=/projects/ps-epigen/software/cellranger-atac-1.2.0/:$PATH
-
 
 cmd="source activate django;python \$(which updateRunStatus.py) -s '1' -f $flowcell_id"
 ssh zhc268@epigenomics.sdsc.edu $cmd
@@ -53,8 +51,10 @@ demux_rna='true'
 ############################################################
 ## 01.atac
 ############################################################
-if $demux_atac #control debug 
+if [[ $(grep SI-NA $samplesheet) ]] #control 
 then
+    export PATH=/projects/ps-epigen/software/cellranger-atac-1.2.0/:$PATH
+
     ## delete last demux info 
     [[ -d ${run_dir}/atac ]] && rm -r ${run_dir}/atac  # delete existing folder
     [[ -f ${run_dir}/__atac.mro ]] && rm ${run_dir}/__atac.mro # delete existing folder
@@ -86,15 +86,17 @@ fi
 ############################################################
 ## 02.rna, use bcl2fastq 
 ############################################################
-## expand 10x barcode
-if $demux_rna #control debug 
+## run single index
+if [[ $(grep SI-GA $samplesheet) ]]  
 then
     cd $out_dir
+    echo "Running demux single index for RNA-seq ... " 
+
     ## cmd
     cmd="bcl2fastq --runfolder-dir $run_dir --output-dir $out_dir --no-lane-splitting \
     --create-fastq-for-index-reads -p 16 --min-log-level TRACE \
     --sample-sheet $samplesheet_rna_expand \
-     --use-bases-mask Y28n*,I8,N16,Y91n* "
+    --use-bases-mask Y28n*,I8,N16,Y91n* "
     echo $cmd|bash     
 
     ## transfer/link data
@@ -111,6 +113,49 @@ then
     wait 
 fi
 
+
+## 2. for dual index 
+if [[ $(grep SI-TT $samplesheet) ]]
+then
+    echo "Running dual indexes" 
+    export PATH=/projects/ps-epigen/software/cellranger-4.0.0/:$PATH
+    
+    ## delete last demux info 
+    [[ ! -z ${flowcell_id} ]] && [[ -d ${run_dir}/${flowcell_id} ]] && rm -r ${run_dir}/${flowcell_id}  # delete existing folder
+    [[ -f ${run_dir}/__${flowcell_id}.mro ]] && rm ${run_dir}/__${flowcell_id}.mro  # delete existing folder
+
+
+    ## only consider extraPars for pure dual index runs
+    [[ $(grep SI-GA $samplesheet) ]] && extraParsVal2="--filter-dual-index"
+    [[ -f ${out_dir}/extraPars.txt ]] && [[ ! $(grep SI-GA $samplesheet) ]] && extraParsVal3=$(cat ${out_dir}/extraPars.txt)
+    echo -e " cellranger mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2"
+    cellranger mkfastq --run=$run_dir  --localcores=16 --mempercore=5 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2
+
+    ## transfer/link data
+    out_dir_sys=${run_dir}/${flowcell_id}/outs/fastq_path/$flowcell_id    
+    ln -sf ${out_dir_sys}/Stats $out_dir
+
+    tt="${out_dir}/SampleSheet_TT.csv"
+    grep -v SI-GA $samplesheet > $tt
+    libs=$(awk -v FS=',' '(NR>1){print $2}' $tt)
+    
+    for i in $libs
+    do
+        #cp -r ${out_dir_sys}/$flowcell_id/${i} ~/data/seqdata/
+        echo $i 
+        mkdir -p ${out_dir_sys}/${i}
+        ln -sf ${out_dir_sys}/${i}_S*fastq.gz ${out_dir_sys}/${i}/
+        ln -sf ${out_dir_sys}/${i} ~/data/seqdata/
+
+        # for counting reads 
+        tempI1=$(mktemp)   
+        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1 
+        nreads=$(zcat $tempI1 | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
+    done 
+
+fi
+
+wait 
 ############################################################
 # update status to finish or warning @ VM
 ############################################################
