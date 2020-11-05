@@ -34,6 +34,7 @@ reads_cnt_file="${out_dir}/reads_cnt.tsv"
 ## samplesheet
 samplesheet="${out_dir}/SampleSheet_I1.csv"
 samplesheet_rna_expand="${out_dir}/SampleSheet_rna_expand.csv"
+samplesheet_rna_expand_TT="${out_dir}/SampleSheet_rna_expand_TT.csv"
 samplesheet_rna="${out_dir}/SampleSheet_rna.csv"
 samplesheet_rna_TT="${out_dir}/SampleSheet_rna_TT.csv"
 samplesheet_atac="${out_dir}/SampleSheet_atac.csv"
@@ -86,7 +87,7 @@ fi
 ############################################################
 ## 02.rna, use bcl2fastq 
 ############################################################
-## run single index
+## 1.run single index
 if [[ $(grep SI-GA $samplesheet) ]]  
 then
     cd $out_dir
@@ -117,41 +118,28 @@ fi
 ## 2. for dual index 
 if [[ $(grep SI-TT $samplesheet) ]]
 then
-    echo "Running dual indexes" 
-    export PATH=/projects/ps-epigen/software/cellranger-4.0.0/:$PATH
-    
-    ## delete last demux info 
-    [[ ! -z ${flowcell_id} ]] && [[ -d ${run_dir}/${flowcell_id} ]] && rm -r ${run_dir}/${flowcell_id}  # delete existing folder
-    [[ -f ${run_dir}/__${flowcell_id}.mro ]] && rm ${run_dir}/__${flowcell_id}.mro  # delete existing folder
+    cd $out_dir
+    echo "Running demux single index for RNA-seq ... " 
 
-
-    ## only consider extraPars for pure dual index runs
-    [[ $(grep SI-GA $samplesheet) ]] && extraParsVal2="--filter-dual-index"
-    [[ -f ${out_dir}/extraPars.txt ]] && [[ ! $(grep SI-GA $samplesheet) ]] && extraParsVal3=$(cat ${out_dir}/extraPars.txt)
-    echo -e " cellranger mkfastq --run=$run_dir  --localcores=16 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2"
-    cellranger mkfastq --run=$run_dir  --localcores=16 --mempercore=5 --csv $samplesheet --qc $extraParsVal3 $extraParsVal2
+    ## cmd
+    cmd="bcl2fastq --runfolder-dir $run_dir --output-dir $out_dir --no-lane-splitting \
+    --create-fastq-for-index-reads -p 16 --min-log-level TRACE \
+    --sample-sheet $samplesheet_rna_expand_TT \
+    --use-bases-mask Y28n*,I10,I10n*,Y91 "
+    echo $cmd|bash     
 
     ## transfer/link data
-    out_dir_sys=${run_dir}/${flowcell_id}/outs/fastq_path/$flowcell_id    
-    ln -sf ${out_dir_sys}/Stats $out_dir
-
-    tt="${out_dir}/SampleSheet_TT.csv"
-    grep -v SI-GA $samplesheet > $tt
-    libs=$(awk -v FS=',' '(NR>1){print $2}' $tt)
-    
-    for i in $libs
+    for i in $(awk -v FS=',' '(NR>1){print $2}' $samplesheet_rna_TT)
     do
-        #cp -r ${out_dir_sys}/$flowcell_id/${i} ~/data/seqdata/
-        echo $i 
-        mkdir -p ${out_dir_sys}/${i}
-        ln -sf ${out_dir_sys}/${i}_S*fastq.gz ${out_dir_sys}/${i}/
-        ln -sf ${out_dir_sys}/${i} ~/data/seqdata/
-
-        # for counting reads 
-        tempI1=$(mktemp)   
-        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1 
-        nreads=$(zcat $tempI1 | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
+        #rm -r $out_dir/$i
+        mkdir -p $out_dir/$i
+        for x in  ${i}*_R*fastq.gz ; do echo -e "mv $x ${i}/${x/_R/_L001_R}"|bash;done
+        for x in  ${i}*_I*fastq.gz ; do echo -e "mv $x ${i}/${x/_I/_L001_I}"|bash;done
+        ln -sf $out_dir/$i ~/data/seqdata/
+        sed -i  "/$i\t/d" $reads_cnt_file  # remove existed record
+        nreads=$(zcat ~/data/seqdata/${i}/${i}*I1*fastq.gz | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
     done 
+    wait 
 
 fi
 
