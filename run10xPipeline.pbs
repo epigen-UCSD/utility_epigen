@@ -58,6 +58,11 @@ wait
 
 # transfer results
 rsync -azru ${WORKDIR}${INPREFIX} ~/data/outputs/10xATAC/
+wait 
+mkdir -p ~/data/outputs/10xATAC/${INPREFIX}/outs/fastqs
+for l in $(echo $fastqs|sed 's/,/ /g');do
+    echo "ln -s $l ~/data/outputs/10xATAC/${INPREFIX}/outs/fastqs/"
+done|bash 
 
 ## addtional check
 #[[ -z $(find ${OUTDIR}/qc/rep1 -name "*_qc.txt") ]]  && { echo  "pipeline interrupted"; exit 0; }

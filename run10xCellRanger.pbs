@@ -58,6 +58,11 @@ rsync -azr ${WORKDIR}${INPREFIX} ~/data/outputs/scRNA/
 
 wait
 
+mkdir -p ~/data/outputs/scRNA/${INPREFIX}/outs/fastqs
+for l in $(echo $fastqs|sed 's/,/ /g');do
+    echo "ln -s $l ~/data/outputs/scRNA/${INPREFIX}/outs/fastqs/"
+done|bash 
+
 
 #!!!!! TODO add a check to see if error file present if so then pass Error! to status
 ## addtional check
