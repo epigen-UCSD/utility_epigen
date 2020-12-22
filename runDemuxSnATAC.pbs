@@ -83,8 +83,8 @@ do
     r2_file=$(find $out_dir -name "*${l}*R2*.fastq.gz")    
     nreads=$(awk -v FS='\t' '($1=="Number of reads repl. 1"){print $2}' $log_file)
     echo -e "$l\t$nreads">>$reads_cnt_file
-    ln -s $r1_file /projects/ps-epigen/seqdata/${l}_R1.fastq.gz
-    ln -s $r2_file /projects/ps-epigen/seqdata/${l}_R2.fastq.gz    
+    ln -sf $r1_file /projects/ps-epigen/seqdata/${l}_R1.fastq.gz
+    ln -sf $r2_file /projects/ps-epigen/seqdata/${l}_R2.fastq.gz    
 done
 
 
