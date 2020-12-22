@@ -25,7 +25,7 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 # transfer data 
 ############################################################
 cd  /home/zhc268/data/seqdata
-cmd="wget  -r -l 10 -q --user $user --password $pass  ${ftp_addr}/*"
+cmd="wget -c  -r -l 10 -q --user $user --password $pass  ${ftp_addr}/*"
 echo $cmd 
 echo $cmd | bash
 
