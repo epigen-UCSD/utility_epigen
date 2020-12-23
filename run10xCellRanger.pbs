@@ -60,7 +60,7 @@ wait
 
 mkdir -p ~/data/outputs/scRNA/${INPREFIX}/outs/fastqs
 for l in $(echo $fastqs|sed 's/,/ /g');do
-    echo "ln -s $l ~/data/outputs/scRNA/${INPREFIX}/outs/fastqs/"
+    echo "ln -sf $l ~/data/outputs/scRNA/${INPREFIX}/outs/fastqs/"
 done|bash 
 
 
