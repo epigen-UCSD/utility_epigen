@@ -42,9 +42,9 @@ cmd="source activate django; python \$(which updateSingleCellStatus.py) -seqid $
 job1=$(ssh zhc268@epigenomics.sdsc.edu $cmd)
 
 
-mkdir -p ~/data/outputs/scRNA/$INPREFIX
-[[ -f ~/data/outputs/scRNA/${INPREFIX}/.inqueue ]] && rm  ~/data/outputs/scRNA/${INPREFIX}/.inqueue 
-[[ -f ~/data/outputs/scRNA/${INPREFIX}/.inprocess ]] && rm  ~/data/outputs/scRNA/${INPREFIX}/.inprocess
+mkdir -p /projects/ps-epigen/outputs/scRNA/$INPREFIX
+[[ -f /projects/ps-epigen/outputs/scRNA/${INPREFIX}/.inqueue ]] && rm  /projects/ps-epigen/outputs/scRNA/${INPREFIX}/.inqueue 
+[[ -f /projects/ps-epigen/outputs/scRNA/${INPREFIX}/.inprocess ]] && rm  /projects/ps-epigen/outputs/scRNA/${INPREFIX}/.inprocess
 
 ## handle mixing RNA-ATAC outputs
 sample_args=${SAMPLE}
@@ -54,13 +54,13 @@ echo $cmd
 echo $cmd |bash 
 
 # transfer results
-rsync -azr ${WORKDIR}${INPREFIX} ~/data/outputs/scRNA/
+rsync -azr ${WORKDIR}${INPREFIX} /projects/ps-epigen/outputs/scRNA/
 
 wait
 
-mkdir -p ~/data/outputs/scRNA/${INPREFIX}/outs/fastqs
+mkdir -p /projects/ps-epigen/outputs/scRNA/${INPREFIX}/outs/fastqs
 for l in $(echo $fastqs|sed 's/,/ /g');do
-    echo "ln -sf $l ~/data/outputs/scRNA/${INPREFIX}/outs/fastqs/"
+    echo "ln -sf $l /projects/ps-epigen/outputs/scRNA/${INPREFIX}/outs/fastqs/"
 done|bash 
 
 

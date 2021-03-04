@@ -4,8 +4,6 @@
 #PBS -l nodes=1:ppn=16
 #PBS -l walltime=8:00:00
 #PBS -l mem=96gb
-#PBS -o /home/zhc268/logs/runDemux10xRNA.out
-#PBS -e /home/zhc268/logs/runDemux10xRNA.err
 #PBS -V
 #PBS -m abe
 #PBS -A epigen-group
@@ -72,10 +70,10 @@ then
     for i in $libs
     do
         echo $i
-        ln -sf ${out_dir_sys}/${i} ~/data/seqdata/
+        ln -sf ${out_dir_sys}/${i} /projects/ps-epigen/seqdata/
         # for counting reads
         tempI1=$(mktemp)
-        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1
+        cat /projects/ps-epigen/seqdata/${i}/${i}*I1*fastq.gz > $tempI1
         nreads=$(zcat $tempI1 | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
     done
 fi
@@ -108,15 +106,15 @@ then
     
     for i in $libs
     do
-        #cp -r ${out_dir_sys}/$flowcell_id/${i} ~/data/seqdata/
+        #cp -r ${out_dir_sys}/$flowcell_id/${i} /projects/ps-epigen/seqdata/
         echo $i
         mkdir -p ${out_dir_sys}/${i}
         ln -sf ${out_dir_sys}/${i}_S*fastq.gz ${out_dir_sys}/${i}/
-        ln -sf ${out_dir_sys}/${i} ~/data/seqdata/
+        ln -sf ${out_dir_sys}/${i} /projects/ps-epigen/seqdata/
         
         # for counting reads
         tempI1=$(mktemp)
-        cat ~/data/seqdata/${i}/${i}*I1*fastq.gz > $tempI1
+        cat /projects/ps-epigen/seqdata/${i}/${i}*I1*fastq.gz > $tempI1
         nreads=$(zcat $tempI1 | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
     done
     

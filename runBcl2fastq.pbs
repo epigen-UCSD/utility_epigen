@@ -3,8 +3,6 @@
 #PBS -N django_bcl2fastq
 #PBS -l nodes=1:ppn=16
 #PBS -l walltime=2:00:00
-#PBS -o /home/zhc268/logs/run_bcl2fastq_c.out
-#PBS -e /home/zhc268/logs/run_bcl2fastq_c.err
 #PBS -V
 #PBS -m abe
 #PBS -A epigen-group
@@ -57,36 +55,36 @@ do
         # paired ended
 	if [ -f Undetermined*R2* ]
 	then
-	    find . -name "${l}*.gz" |xargs -n1 -I '{}' echo "cp -pfs $(pwd)/{} /home/zhc268/data/seqdata/{}" | sed "s/_S[0-9]*_/_/2;s/\/\.//g;s/_001.fastq/.fastq/2" |bash
+	    find . -name "${l}*.gz" |xargs -n1 -I '{}' echo "cp -pfs $(pwd)/{} /projects/ps-epigen/seqdata/{}" | sed "s/_S[0-9]*_/_/2;s/\/\.//g;s/_001.fastq/.fastq/2" |bash
 
             # contain 10x barcodes 
             if [[ ${barcode_names[$i]} == "SI-NA"* ]]
             then
                 echo -e "cat paired-ended 10x lib $l"
-                cat /home/zhc268/data/seqdata/${l}_[0-3]_R1.fastq.gz > /home/zhc268/data/seqdata/${l}_R1.fastq.gz & sleep 1
-                cat /home/zhc268/data/seqdata/${l}_[0-3]_R2.fastq.gz > /home/zhc268/data/seqdata/${l}_R2.fastq.gz & sleep 1
+                cat /projects/ps-epigen/seqdata/${l}_[0-3]_R1.fastq.gz > /projects/ps-epigen/seqdata/${l}_R1.fastq.gz & sleep 1
+                cat /projects/ps-epigen/seqdata/${l}_[0-3]_R2.fastq.gz > /projects/ps-epigen/seqdata/${l}_R2.fastq.gz & sleep 1
                 wait
-                rm /home/zhc268/data/seqdata/${l}_[0-3]_R[1-2].fastq.gz
+                rm /projects/ps-epigen/seqdata/${l}_[0-3]_R[1-2].fastq.gz
             fi
 
             
             ## count the reads
-            nreads=$(zcat /home/zhc268/data/seqdata/${l}_R1.fastq.gz| wc -l ) && echo -e "$l\t$[nreads/4]" >> $reads_cnt_file & sleep 1
+            nreads=$(zcat /projects/ps-epigen/seqdata/${l}_R1.fastq.gz| wc -l ) && echo -e "$l\t$[nreads/4]" >> $reads_cnt_file & sleep 1
                                                                             
         # single-ended
 	else
-	    find . -name "${l}*.gz" |xargs -n1 -I '{}' echo "cp -pfs $(pwd)/{} /home/zhc268/data/seqdata/{}" | sed "s/_S[0-9]*_/_/2;s/\/\.//g;s/_001.fastq/.fastq/2;s/_R1//2" |bash
+	    find . -name "${l}*.gz" |xargs -n1 -I '{}' echo "cp -pfs $(pwd)/{} /projects/ps-epigen/seqdata/{}" | sed "s/_S[0-9]*_/_/2;s/\/\.//g;s/_001.fastq/.fastq/2;s/_R1//2" |bash
 
             # contain 10x barcodes 
             if [[ ${barcode_names[$i]} == "SI-NA"* ]]
             then
                 echo -e "cat single-ended 10x lib $l"                
-                cat /home/zhc268/data/seqdata/${l}_[0-3].fastq.gz > /home/zhc268/data/seqdata/${l}.fastq.gz 
-                rm /home/zhc268/data/seqdata/${l}_[0-3].fastq.gz                            
+                cat /projects/ps-epigen/seqdata/${l}_[0-3].fastq.gz > /projects/ps-epigen/seqdata/${l}.fastq.gz 
+                rm /projects/ps-epigen/seqdata/${l}_[0-3].fastq.gz                            
             fi
 
             ## count the reads
-	    nreads=$(zcat /home/zhc268/data/seqdata/${l}.fastq.gz| wc -l ) && echo -e "$l\t$[nreads/4]" >> $reads_cnt_file & sleep 1
+	    nreads=$(zcat /projects/ps-epigen/seqdata/${l}.fastq.gz| wc -l ) && echo -e "$l\t$[nreads/4]" >> $reads_cnt_file & sleep 1
 	fi
         
 

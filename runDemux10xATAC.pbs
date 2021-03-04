@@ -1,10 +1,8 @@
 #!/bin/bash
 #PBS -q condo
-#PBS -N django_10xDemux
+#PBS -N django_10xDemuxATAC
 #PBS -l nodes=1:ppn=16
 #PBS -l walltime=8:00:00
-#PBS -o /home/zhc268/logs/runDemux10xATAC.out
-#PBS -e /home/zhc268/logs/runDemux10xATAC.err
 #PBS -V
 #PBS -m abe
 #PBS -A epigen-group
@@ -51,12 +49,12 @@ ln -sf ${out_dir_sys}/Stats $out_dir
 ln -sf ${out_dir_sys}/Stats $out_dir
 for i in $libs
 do
-    #cp -r ${out_dir_sys}/$flowcell_id/${i} ~/data/seqdata/
-    ln -sf ${out_dir_sys}/${flowcell_id}/${i} ~/data/seqdata/
-    cat ~/data/seqdata/${i}/${i}*R3*fastq.gz > ~/data/seqdata/${i}_R2.fastq.gz & sleep 1
-    cat ~/data/seqdata/${i}/${i}*R1*fastq.gz > ~/data/seqdata/${i}_R1.fastq.gz & sleep 1
+    #cp -r ${out_dir_sys}/$flowcell_id/${i} /projects/ps-epigen/seqdata/
+    ln -sf ${out_dir_sys}/${flowcell_id}/${i} /projects/ps-epigen/seqdata/
+    cat /projects/ps-epigen/seqdata/${i}/${i}*R3*fastq.gz > /projects/ps-epigen/seqdata/${i}_R2.fastq.gz & sleep 1
+    cat /projects/ps-epigen/seqdata/${i}/${i}*R1*fastq.gz > /projects/ps-epigen/seqdata/${i}_R1.fastq.gz & sleep 1
     wait 
-    nreads=$(zcat ~/data/seqdata/${i}_R1.fastq.gz | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
+    nreads=$(zcat /projects/ps-epigen/seqdata/${i}_R1.fastq.gz | wc -l ) && echo -e "$i\t$[nreads/4]" >> $reads_cnt_file & sleep 1
 done 
 wait 
 ############################################################

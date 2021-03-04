@@ -25,13 +25,13 @@ setQC_wrapper.sh -n $set_id -t $type $snap  2>&1| tee -a /projects/ps-epigen/log
 ############################################################
 # update status to finish or warning @ VM
 ############################################################
-ver=$(cd ~/software/setQC/; git describe --tags)
+ver=$(cd /projects/ps-epigen/software/setQC/; git describe --tags)
 [[ $type = "atac_chip" ]] && nm=_$type
 [[ $type = "chip" ]] && nm=_$type
-html_file="/projects/ps-epigen/outputs/setQCs/${set_id}/$(cat ~/data/outputs/setQCs/${set_id}.rstr.txt)/setQC_report${nm}.html"
+html_file="/projects/ps-epigen/outputs/setQCs/${set_id}/$(cat /projects/ps-epigen/outputs/setQCs/${set_id}.rstr.txt)/setQC_report${nm}.html"
 status='-1'
 [[ -f $html_file ]] && status='3'
 
-url="http://epigenomics.sdsc.edu:8088/${set_id}/$(cat ~/data/outputs/setQCs/${set_id}.rstr.txt)/setQC_report${nm}.html"
+url="http://epigenomics.sdsc.edu:8088/${set_id}/$(cat /projects/ps-epigen/outputs/setQCs/${set_id}.rstr.txt)/setQC_report${nm}.html"
 cmd="source activate django;python \$(which updateLibrariesSetQC.py) -s $status -v $ver -url $url -id $set_id"
 ssh zhc268@epigenomics.sdsc.edu $cmd

@@ -24,7 +24,7 @@ ssh zhc268@epigenomics.sdsc.edu $cmd
 ############################################################
 # transfer data 
 ############################################################
-cd  /home/zhc268/data/seqdata
+cd  /projects/ps-epigen/seqdata
 cmd="wget -c  -r -l 10 -q --user $user --password $pass  ${ftp_addr}/*"
 echo $cmd 
 echo $cmd | bash
@@ -58,41 +58,41 @@ do
     ## handle PE  
     if [[ ! -z  $IS_PE && $nlane -gt 1 ]] ## more than 1 lane
     then
-        echo -e "cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R1.fastq.gz"|bash
+        echo -e "cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /projects/ps-epigen/seqdata/${lib}_R1.fastq.gz"|bash
         if [ ! -z $IS_10x ] ## 10x
         then
-             mkdir -p /home/zhc268/data/seqdata/${lib}
-             ln -sf ${fastq_dir}/${lib}*.fastq.gz /home/zhc268/data/seqdata/${lib}/
-             echo -e "cat  ${fastq_dir}/${lib}*R3*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz"|bash
+             mkdir -p /projects/ps-epigen/seqdata/${lib}
+             ln -sf ${fastq_dir}/${lib}*.fastq.gz /projects/ps-epigen/seqdata/${lib}/
+             echo -e "cat  ${fastq_dir}/${lib}*R3*.fastq.gz > /projects/ps-epigen/seqdata/${lib}_R2.fastq.gz"|bash
         elif [ -z $IS_10x ] ## bulk
         then
-             echo -e "cat  ${fastq_dir}/${lib}*R2*.fastq.gz > /home/zhc268/data/seqdata/${lib}_R2.fastq.gz"|bash
+             echo -e "cat  ${fastq_dir}/${lib}*R2*.fastq.gz > /projects/ps-epigen/seqdata/${lib}_R2.fastq.gz"|bash
         fi
-        nreads=$(zcat /home/zhc268/data/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
+        nreads=$(zcat /projects/ps-epigen/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
     elif [[ ! -z  $IS_PE && $nlane -eq 1 ]] # only one lane 
     then
-        ln -sf ${fastq_dir}/${lib}*R1*.fastq.gz /home/zhc268/data/seqdata/${lib}_R1.fastq.gz
+        ln -sf ${fastq_dir}/${lib}*R1*.fastq.gz /projects/ps-epigen/seqdata/${lib}_R1.fastq.gz
         if [ ! -z $IS_10x ] ## 10x
         then
-             mkdir -p /home/zhc268/data/seqdata/${lib}
-             ln -sf ${fastq_dir}/${lib}*.fastq.gz /home/zhc268/data/seqdata/${lib}/
-             ln -sf ${fastq_dir}/${lib}*R3*.fastq.gz  /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
+             mkdir -p /projects/ps-epigen/seqdata/${lib}
+             ln -sf ${fastq_dir}/${lib}*.fastq.gz /projects/ps-epigen/seqdata/${lib}/
+             ln -sf ${fastq_dir}/${lib}*R3*.fastq.gz  /projects/ps-epigen/seqdata/${lib}_R2.fastq.gz 
         elif [ -z $IS_10x ] ## bulk 
         then
-             ln -sf  ${fastq_dir}/${lib}*R2*.fastq.gz  /home/zhc268/data/seqdata/${lib}_R2.fastq.gz 
+             ln -sf  ${fastq_dir}/${lib}*R2*.fastq.gz  /projects/ps-epigen/seqdata/${lib}_R2.fastq.gz 
         fi
-        nreads=$(zcat /home/zhc268/data/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
+        nreads=$(zcat /projects/ps-epigen/seqdata/${lib}_R1.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
     fi
 
     ## handle  SE 
     if [[ -z $IS_PE && $nlane -gt 1 ]] #handle SE & more than 1 lane
     then
-        cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /home/zhc268/data/seqdata/${lib}.fastq.gz
-        nreads=$(zcat /home/zhc268/data/seqdata/${lib}.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
+        cat  ${fastq_dir}/${lib}*R1*.fastq.gz > /projects/ps-epigen/seqdata/${lib}.fastq.gz
+        nreads=$(zcat /projects/ps-epigen/seqdata/${lib}.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
     elif [[ -z $IS_PE && $nlane -eq 1 ]] #handle SE & more than 1 lane
     then
-         ln -sf ${fastq_dir}/${lib}*R1*.fastq.gz /home/zhc268/data/seqdata/${lib}.fastq.gz
-         nreads=$(zcat /home/zhc268/data/seqdata/${lib}.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
+         ln -sf ${fastq_dir}/${lib}*R1*.fastq.gz /projects/ps-epigen/seqdata/${lib}.fastq.gz
+         nreads=$(zcat /projects/ps-epigen/seqdata/${lib}.fastq.gz | wc -l ) && echo -e "$lib\t$[nreads/4]" >> $reads_cnt_file        
     fi
 done
 wait
